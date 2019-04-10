@@ -19,7 +19,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   Blog on IIS, ASP.NET and Azure App Service technologies
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: @puneetgms
+twitter_username: puneetgms
 github_username:  puneet-gupta
 
 # Build settings
