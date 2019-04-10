@@ -1,0 +1,81 @@
+---
+layout: post
+title: DCOM Error 10010 in the Event logs and SLUGGISH server performance
+date: 2009-01-21 09:22:45.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="DCOM Error 10010 in the Event logs and SLUGGISH server performance" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=173" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="We have come across this specific issue on Windows 2003 (post service pack 1) and Windows XP (post service pack 2) where the machine experiences slow performance and we observe many DCOM 10010 ERRORS in the event logs. If you are running in to this issue, you may see some of the symptoms/errors listed below...." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_thumb.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="DCOM Error 10010 in the Event logs and SLUGGISH server performance" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=173" />
+    <meta name="twitter:description" content="We have come across this specific issue on Windows 2003 (post service pack 1) and Windows XP (post service pack 2) where the machine experiences slow performance and we observe many DCOM 10010 ERRORS in the event logs. If you are running in to this issue, you may see some of the symptoms/errors listed below...." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_thumb.png" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2009/01/21/dcom-error-10010-in-the-event-logs-and-sluggish-server-performance/"
+---
+<p>We have come across this specific issue on Windows 2003 (post service pack 1) and Windows XP (post service pack 2) where the machine experiences slow performance and we observe many DCOM 10010 ERRORS in the event logs. If you are running in to this issue, you may see some of the symptoms/errors listed below.</p>
+<ul>
+<li>Doing anything takes forever. You click <strong>Start</strong> button and it responds to you after a minute (or may be more than that). Switching windows in the Taskbar takes very long.</li>
+<li>If you have IIS installed on the server, the IIS related services may not start or may hang while starting. Typically these errors appear when you try to start them.
+<ul>
+<li>Trying to start the IISADMIN service throws an error - <span style="color: #008000">Windows Could not start the IIS Admin Service on Local Computer. For more information, review the system Event log. If this is a non-Microsoft service, contact the service vendor, and refer to service-specific error code –2147221164(0x80040154)</span> or <span style="color: #008000">The IIS Admin Service service terminated with service-specific error 2147746132 (0x80040154). </span></li>
+<li>If IISADMIN service is started, trying to start the World Wide Web Publishing Service hangs and the service goes into the Starting state and after some time it may throw the error - <span style="color: #008000">The World Wide Web Publishing Service service terminated with service-specific error 2148007941 (0x80080005) </span></li>
+</ul>
+</li>
+<li>While expanding COM+ Applications inside component services, you may get the below error
+<ul>
+<li><span style="color: #008000">An error occurred while processing the last operation</span></li>
+<li><span style="color: #008000">Error code 8000FFF - Catastrophic failure</span></li>
+</ul>
+</li>
+<li>You observe many DCOM Errors 10010 in the event viewer (like this)
+<ul>
+<li><span style="color: #008000">The server {BA126AD1-2166-11D1-B1D0-00805FC1270E} did not register with DCOM within the required timeout </span></li>
+<li><span style="color: #008000">The server {8BC3F05E-D86B-11D0-A075-00C04FB68820} did not register with DCOM within the required timeout</span></li>
+</ul>
+</li>
+</ul>
+<p>The interesting thing to note here is that most of the components which are failing or performing slowly are the basic system components only. The GUID {BA126AD1-2166-11D1-B1D0-00805FC1270E}  is the CLISID (class id) for Network Connection Manager Class and the GUID {8BC3F05E-D86B-11D0-A075-00C04FB68820} is the CLSID for WMI. The one big common thing between all these symptoms is that all the programs which exhibit the above symptoms are dependent on DCOM.</p>
+<p>If you end up with the symptoms/errors listed above, one quick thing to check would be the <strong>permissions on the HKCR\CLSID</strong> registry key. By default this is how the permission on that key should look like.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_2.png"><img style="border: 0px currentColor" title="image" src="{{ site.baseurl }}/assets/image_thumb.png" alt="image" width="204" height="244" border="0" /></a></p>
+<p>If you are running into this issue, you will see that the USERS group is not listed in the ACL list for this registry key. You might see an account with the name RESTRICTED listed out there. To fix the problem, you can configure the ACLS on the HKCR\CLSID key in the default way. For Windows 2003, this is how the default permissions on the HKCR\CLSID should look like.</p>
+<ul>
+<li>Administrators – FULL CONTROL</li>
+</ul>
+<ul>
+<li>Power Users – READ</li>
+</ul>
+<ul>
+<li>SYSTEM – FULL CONTROL</li>
+<li>Users – READ</li>
+</ul>
+<p>After making the registry change, <strong>you have to reboot the machine </strong>so that the programs can access the registry during the startup and hence function properly.</p>
+<p><span style="color: #0000ff">At this point, we haven't got a chance to determine the root cause of this problem. In other words, we don't know what particular action ends up removing the USERS group from the HKCR\CLSID registry key and we need your help in determining root cause. If you are able to reproduce this issue at your end, we will like to know the steps you took to reproduce this issue to figure out what CAUSES this and try to avoid it from occurring in the first place. Please feel free to post your comments at the end of this blog to let us know if you have a successful repro of this situation.</span></p>
+<p><strong><span style="text-decoration: underline">PLEASE NOTE</span></strong> : The permissions on the HKCR\CLSID may not be the only cause of the errors. The errors that are listed above are very generic errors and can come in a lot of situations. The purpose of this article is to eliminate one basic cause which we come across a lot of times. If fixing the permissions on the HKCR\CLSID and then rebooting the machine, doesn't fix the issue for you, we recommend you run the Process Monitor tool and look for any kind of registry level or file level access denied’s which are happening on the server.  Otherwise check out the following list of KB articles which may point more specifically to the issue that you are facing.</p>
+<ul>
+<li>You may experience various problems after you install the Microsoft Security Bulletin MS05-051 for COM+ and MS DTC - <a href="http://support.microsoft.com/kb/909444">http://support.microsoft.com/kb/909444</a></li>
+<li>An event ID 10010 error message may be logged many times in the event log of your Windows Server 2003-based computer that is running Terminal Services - <a href="http://support.microsoft.com/kb/873375">http://support.microsoft.com/kb/873375</a></li>
+<li>FIX: You experience problems after you install Windows Server 2003 Service Pack 1 or Service Pack 2 on a server that is running Application Center 2000 - <a href="http://support.microsoft.com/kb/891330">http://support.microsoft.com/kb/891330</a></li>
+<li>You may receive an "Error code 80080005 -- server execution failed." error message when you start many COM+ applications - <a href="http://support.microsoft.com/kb/870655">http://support.microsoft.com/kb/870655</a></li>
+<li>A Windows Server 2003-based computer stops responding when you perform a backup of an Exchange Server database - <a href="http://support.microsoft.com/kb/912063">http://support.microsoft.com/kb/912063</a></li>
+<li>PRB: ASP pages do not process and DCOM event 10010 appears in the system event log <a href="http://support.microsoft.com/kb/327153/">http://support.microsoft.com/kb/327153/</a></li>
+<li>How To Troubleshoot ASP in IIS 5.0 <a href="http://support.microsoft.com/kb/309051">http://support.microsoft.com/kb/309051</a></li>
+</ul>

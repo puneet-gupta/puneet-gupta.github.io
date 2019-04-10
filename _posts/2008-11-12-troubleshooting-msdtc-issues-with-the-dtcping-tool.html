@@ -1,0 +1,187 @@
+---
+layout: post
+title: Troubleshooting MSDTC issues with the DTCPing tool
+date: 2008-11-12 09:28:26.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Troubleshooting MSDTC issues with the DTCPing tool" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="Every day the Distributed Services support team in Microsoft helps customers in troubleshooting some of the most common Distributed Transaction errors which are a direct result of MSRPC (Microsoft Remote Procedure Call) communication failing in a network because of some SecurityFirewall settings. On an application layer (like SQL), these are the common error messages that..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_thumb.jpg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Troubleshooting MSDTC issues with the DTCPing tool" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool/" />
+    <meta name="twitter:description" content="Every day the Distributed Services support team in Microsoft helps customers in troubleshooting some of the most common Distributed Transaction errors which are a direct result of MSRPC (Microsoft Remote Procedure Call) communication failing in a network because of some SecurityFirewall settings. On an application layer (like SQL), these are the common error messages that..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_thumb.jpg" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool/"
+---
+<p>Every day the Distributed Services support team in Microsoft helps customers in troubleshooting some of the most common Distributed Transaction errors which are a direct result of MSRPC (Microsoft Remote Procedure Call) communication failing in a network because of some Security\Firewall settings. On an application layer (like SQL), these are the common error messages that will be bubbled up.</p>
+<ul>
+<li>Server: Msg 7391, Level 16, State 1, Line 2 The operation could not be performed because the OLE DB provider 'SQLOLEDB' was unable to begin a distributed transaction. OLE/DB provider returned message: New transaction cannot enlist in the specified transaction coordinator.</li>
+<li>New transaction cannot enlist in the specified transaction coordinator (0x8004d00a)</li>
+<li>The transaction has already been implicitly or explicitly committed or aborted (0x8004d00e)</li>
+</ul>
+<p>If you encounter one of the above error messages while using Distributed Transactions from your application, feel free to use the DTCPING tool to find out where the problem lies. This blog explains how to use the DTCPing tool to narrow down the source of the problem and how to fix it.</p>
+<p>Distributed Transactions (specifically OleTx transactions) use the MSRPC protocol to talk to MSDTC on the other machine. To make sure that the two machines are able to communicate with each other using the MSRPC protocol, you can run the DTCPING tool on both the machines to test whether the normal RPC communication is working fine or not. Before talking about the various errors that are thrown by this tool, it is very important to understand the right way to run the tool properly so that we can get the right output from the tool</p>
+<ol>
+<li>Distributed Transactions come in to picture whenever there is more than one server participating in a transaction. If there is just a single server involved in the distributed transaction and you are still getting some errors while running distributed transactions, then this is not the right article to focus upon. Once you have determined the right servers that are participating in the distributed transaction, launch the DTCPING.EXE tool simultaneously on both of the machines. DTCPING.EXE should be running at the same time on both the machines before you put the right server name and click the PING button.</li>
+<li>In the Remote Server Name section of the DTCPING tool you should only put the <span style="text-decoration: underline">NETBIOS</span> name of the server with which you are trying to run distributed transaction. Any test which is done after specifying the IP address of the server or the FQDN of the server is an invalid test. You MUST provide the NETBIOS name of the server against which you are trying to run distributed transactions as MSDTC uses MSRPC as the underlying mechanism and MSRPC works on NETBIOS name resolution only.</li>
+<li>In a Cluster - <b>On a clustered machine you should always put the name of the NETWORK RESOURCE on which the MSDTC resource is dependent on </b>in the Remote Server Name field. To find out the right NETWORK NAME to use in DTCPing, open up the Cluster Administrator and go to the group in which the MSDTC Resource is present. That group should have one network name resource on which the DTC Resource is dependent on. To find out the network name, just go to the properties of the network name resource and go to the Parameters tab. The name that you see there is what is network name for this MSDTC resource. Lets understand this with an example :- lets say that you have a 2 node cluster with two nodes with the NETBIOS names as DBSERVER01 and DBSERVER02 and you are trying to run distributed transactions from a third server APPSERVER. Then to run DTCPing in the right way, you should start the DTCPING.EXE on the APPSERVER and the active node of the cluster. (By active node, I mean the node on which the DTC resource is online). Then from the Cluster Administrator go to the properties of the NETWORK NAME resource in which the Distributed Transaction Coordinator resource is present and go to the PARAMETERS tab. Note this network name. Once you have determined the right network name, launch DTCPING on the active node of the cluster and the APPSERVER and inside the DTCPing window on the APPSERVER, put in the network name of the clustered MSDTC Resource inside the (Remote Server Name) field and then click PING.</li>
+<li>You should always have only one instance of DTCPING.EXE running on the server when you are testing and for subsequent tests you should always close the DTCPING tool and open it again.</li>
+</ol>
+<p>After ensuring that you have read the above points properly, you should just run the DTCPING tool and in the Remote Server name type in the right server name and click PING. If everything works fine you should see the following message being returned by the tool. (Here DTCPing was ran from machine with NETBIOS name SOURCE to the machine with NETBIOS name DESTINATION)</p>
+<blockquote>
+<p style="color: #0000ff">++++++++++++++++++++++++++++++++++++++++++++++<br />
+DTCping 1.9 Report for SOURCE<br />
+++++++++++++++++++++++++++++++++++++++++++++++<br />
+RPC server is ready<br />
+++++++++++++Validating Remote Computer Name++++++++++++<br />
+11-21, 04:31:01.455--&gt;Start DTC connection test<br />
+Name Resolution:<br />
+DESTINATION--&gt;65.52.22.254--&gt;DESTINATION.contoso.com<br />
+11-21, 04:31:01.470--&gt;Start RPC test (SOURCE--&gt;DESTINATION)<br />
+RPC test is successful<br />
+Partner's CID:084B708C-F0C5-4E65-95F2-8E2DEF73FFF3<br />
+++++++++++++RPC test completed+++++++++++++++<br />
+++++++++++++Start DTC Binding Test +++++++++++++<br />
+Trying Bind to DESTINATION<br />
+11-21, 04:31:01.830--&gt;SOURCE Initiating DTC Binding Test....<br />
+Test Guid:B5544E05-D64B-40AC-B283-71947914DED3<br />
+Received reverse bind call from DESTINATION<br />
+Network Name: SOURCE<br />
+Source  Port: 1116<br />
+Hosting Machine:SOURCE<br />
+Binding success: SOURCE--&gt;DESTINATION<br />
+++++++++++++DTC Binding Test END+++++++++++++</p>
+</blockquote>
+<p>If you see the above message, go to the second server and put the name of the source server in the Remote Server Name field and hit PING and make sure that you see the same results as above. If both of the servers return success after running the DTCPING tool but the distributed transactions are still not working, then you should see the PART II of this article which talks about how to fix distributed transaction issues when the DTCPING works fine between two machines.</p>
+<p>If the result of the tool is not success, figure out what error you are getting and follow the steps mentioned in the sections below to fix the error message.</p>
+<ul>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#getHostbynameFailure">getHostByname failure</a></li>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#TheRpcServerisUnavailable">The Rpc Server is Unavailable</a></li>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#TheRemoteProcedureCallFailed">The Remote Procedure Call Failed</a></li>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#Therearenomoreendpoints">There are no more endpoints from the endpoint mapper</a></li>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#AccessisDenied">Access is Denied</a></li>
+<li><a href="http://blogs.msdn.com/distributedservices/archive/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool.aspx#Notenoughresources">Not enough resources are available to complete this operation</a></li>
+</ul>
+<p><strong><span style="text-decoration: underline">ERROR MESSAGE 1 - </span></strong><a title="getHostbynameFailure" name="getHostbynameFailure"></a><strong><span style="text-decoration: underline">gethostbyname failure</span></strong></p>
+<blockquote>
+<p style="color: #ff0000">DTCPing log file: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES8618<br />
+RPC server is ready<br />
+Please Start Partner DTCPing before pinging<br />
+++++++++++++Validating Remote Computer Name++++++++++++<br />
+Please refer to following log file for details: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES861840.log<br />
+Error(0xB7) at nameping.cpp @43<br />
+--&gt;gethostbyname failure --&gt;183(Cannot create a file when that file already exists.)<br />
+Can not resolve abc Invalid remote host name:abc</p>
+</blockquote>
+<p>&nbsp;</p>
+<p>I think this error is more than self explanatory. You will get this if the host name that you added in the Remote Server Name is not a valid host name. Make sure that the remote server name that you specified in the DTCPING tool resolves to a valid IP address by running the ping command. If that host name is not resolving to any IP address, you can try adding the host name in the hosts file and try running the tool again.</p>
+<p><span style="text-decoration: underline"><strong>ERROR MESSAGE 2 - </strong></span><a title="TheRpcServerisUnavailable" name="TheRpcServerisUnavailable"></a><span style="text-decoration: underline"><strong>The RPC server is unavailable</strong></span></p>
+<blockquote>
+<p style="color: #ff0000">DTCping log file: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES8618<br />
+RPC server is ready Please Start Partner DTCping before pinging<br />
+++++++++++++Validating Remote Computer Name++++++++++++<br />
+Please refer to following log file for details: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES861896.log<br />
+Invoking RPC method on turtle86<br />
+Problem:fail to invoke remote RPC method Error(0x6BA) at dtcping.cpp @303<br />
+--&gt;RPC pinging exception --&gt;1722(The RPC server is unavailable.)<br />
+RPC test failed</p>
+</blockquote>
+<p>This indicates that either the port 135 or one of the ports in the DCOM port range is blocked on the firewall. To confirm this further let's say you ran DTCPING from SERVER01 to SERVER02 and you got this error. Now open up a command prompt on SERVER01 and type telnet SERVER02 135 (Before running this test just ensure that the Telnet service is started on the server. On a Windows 2008 Server, the telnet service is not installed by default and you have to install it by configuring the role services on the server.). If you see a blank window with a cursor blinking, that is enough to tell that the port is NOT blocked but if the telnet command fails with an error, you can easily infer that the port 135 is blocked and you should check with your network team to get the port 135 opened up bi-directionally on the firewall. If telnet to port 135 works just fine, then do a NETSTAT -anob on the SERVER02 and find out the port on which the DTCPING.EXE is listening. Then come back to SERVER01 and do a telnet SERVER02 &lt;PORT_NUMBER&gt;. If you got this error, then this test has to fail. MSDTC uses the MSRPC protocol to talk to MSDTC on the remote machine. As a result of the normal working of the MSRPC protocol, MSDTC is free to use one of the dynamic ports within the range 1024-65535. Well if MSDTC can use any one port within this range, then how should I be configuring my firewall? Should I got ahead and open up the entire range on my firewall? Then what is use of a firewall? The answer to that is - you don't have to open up this entire range on the firewall but you can restrict the RPC End Point Mapper Service to just specify a range of ports that will be used by any DCOM program. <b>Please note again - this range impacts ALL the programs that use MSRPC and not just MSDTC. </b>You can configure this range in the registry or in the DCOMCNFG UI. To specify this range, scroll down below to the section "RESTRICTING THE DCOM PORT RANGE" which talks about how to restrict DCOM to use a specific port range.</p>
+<p><strong><span style="text-decoration: underline">ERROR MESSAGE 3 - </span></strong><a title="TheRemoteProcedureCallFailed" name="TheRemoteProcedureCallFailed"></a><strong><span style="text-decoration: underline">The remote procedure call failed</span></strong></p>
+<blockquote>
+<p style="color: #ff0000">RPC server is ready<br />
+++++++++++++Validating Remote Computer Name++++++++++++<br />
+Problem:fail to invoke remote RPC method<br />
+Error(0x6BE) at dtcping.cpp @303<br />
+--&gt;RPC pinging exception --&gt;1726(The remote procedure call failed.)<br />
+RPC test failed</p>
+</blockquote>
+<p>This error is a result of a firewall disconnecting the TCP connection between the two machines. You have to get in touch with your firewall administrators to help you figure out why the Firewall is closing the TCP connection between two machines. To troubleshoot this error you can install Network Monitor tool on both the machines and re-run the test and you should see a TCP RESET packet sent by a network device which is trying to close the connection.</p>
+<p><strong><span style="text-decoration: underline">ERROR MESSAGE 4 - </span></strong><a title="Therearenomoreendpoints" name="Therearenomoreendpoints"></a><strong><span style="text-decoration: underline">There are no more endpoints from the endpoint mapper</span></strong></p>
+<blockquote>
+<p style="color: #ff0000">DTCping log file: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES8626<br />
+RPC server is ready Please Start Partner DTCping before pinging<br />
+++++++++++++Validating Remote Computer Name++++++++++++<br />
+Please refer to following log file for details: C:\Documents and Settings\username\Desktop\DTC_PING\TURTLES86268.log<br />
+Invoking RPC method on turtle86<br />
+Problem:fail to invoke remote RPC method Error(0x6D9) at dtcping.cpp @303<br />
+--&gt;RPC pinging exception --&gt;1753(There are no more endpoints available from the endpoint mapper.)<br />
+RPC test failed</p>
+</blockquote>
+<p>This error makes it appear that RPC is running out of DCOM Ports but you should not infer this error as a port exhaustion immediately. If you are able to run DTCPING.EXE on both the machines and during startup of the EXE, the tool doesn't complain of an out of port error, then this error is just a result of Firewall blocking the ports and the troubleshooting for this error should be exactly same as troubleshooting the "The RPC server is unavailable" error which is described above. Why am I saying that? Let's say that we are running out of DCOM ports (which can typically happen if you have specified a port range and the range is too small, something less than 30), then you should see an error the moment you start the DTCPING.EXE. Because that's when the DTCPing.exe will contact the End Point Mapper service (RpcSS) and ask for a dynamic port. If the DTCPing.exe starts up just fine, then it means that it got the right port allocated to it and hence there is no question of the Endpoint Mapper running out of DCOM ports.</p>
+<p><strong><span style="text-decoration: underline">ERROR MESSAGE 5 - </span></strong><a title="AccessisDenied" name="AccessisDenied"></a><strong><span style="text-decoration: underline">ERROR MESSAGE 5 - Access is Denied</span></strong></p>
+<blockquote>
+<p style="color: #ff0000">Invoking RPC method on TURTLE86<br />
+Problem:fail to invoke remote RPC method<br />
+Error(0x5) at dtcping.cpp @303<br />
+--&gt;RPC pinging exception<br />
+--&gt;5(Access is denied.)</p>
+</blockquote>
+<p>This error will only occur if the destination machine is a Windows XP machine or a Windows VISTA machine. This is an additional security in the RPC layer which is configured on the client operating systems. More details on this security aspect is described in the article "RPC Interface Restriction" on Technet</p>
+<ul>
+<li>RPC Interface Restriction <a href="http://technet.microsoft.com/en-us/library/cc781010.aspx">http://technet.microsoft.com/en-us/library/cc781010.aspx</a></li>
+</ul>
+<p>To get rid of this error just follow these steps to configure the registry key and REBOOT the machine.</p>
+<ol>
+<li>Click Start, click Run, type Regedit, and then click OK.</li>
+<li>Locate and then click the following registry key:  <strong>HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT</strong></li>
+<li>On the Edit menu, point to New, and then click Key.</li>
+<li>Note If the RPC registry key already exists, go to step 5.</li>
+<li>Type RPC, and then press ENTER. Click RPC.</li>
+<li>On the Edit menu, point to New, and then click DWORD Value.</li>
+<li>Type RestrictRemoteClients, and then press ENTER.</li>
+<li>Click RestrictRemoteClients.</li>
+<li>On the Edit menu, click Modify.</li>
+<li>In the Value data box, type 0, and then click OK.</li>
+<li>Note To enable the RestrictRemoteClients setting, type1.</li>
+<li>Close Registry Editor and restart the computer.</li>
+</ol>
+<p><strong><span style="text-decoration: underline">ERROR MESSAGE 6 - </span></strong><a title="Notenoughresources" name="Notenoughresources"></a><strong><span style="text-decoration: underline">Not enough resources are available to complete this operation</span></strong></p>
+<blockquote>
+<p style="color: #ff0000">DTCping log file: Z:\Tools\DTC_PING\TURTLE865072.log<br />
+Error(0x6B9) at rpcUtil.cpp @133<br />
+--&gt;I_RpcServerAllocateIpPort<br />
+--&gt;1721(Not enough resources are available to complete this operation.)<br />
+Error(0x6B9) at rpcUtil.cpp @54<br />
+--&gt;1721(Not enough resources are available to complete this operation.)</p>
+</blockquote>
+<p>You will get this error message immediately after starting the DTCPING window. This error message means that RPC is running out of the ports on the machine because the DCOM Port range that you defined is too less or there are a lot of other RPC applications which are using DCOM ports (Typically a DCOM or a RPC program just uses one DCOM port but it is possible for an application to acquire more than one DCOM port by calling the RPC API's directly). To fix this error message increase the port range by following these steps.</p>
+<p><strong><span style="text-decoration: underline">RESTRICTING THE DCOM PORT RANGE</span></strong></p>
+<p>1. Go to Start -&gt; Run. Type in DCOMCNFG.<br />
+2. Go to the properties of the My Computer node under the Computers folder underneath Component Services.<br />
+3. Under the My Computer Properties look under the Default Protocols tab.<br />
+4. Over there make sure that Connection-oriented TCP/IP is selected and then click on Properties.<br />
+5. You will see a window like this<br />
+<a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_2.jpg"><img style="border-width: 0px" title="EmptyPortRange" src="{{ site.baseurl }}/assets/EmptyPortRange_thumb.jpg" alt="EmptyPortRange" width="346" height="326" border="0" /></a></p>
+<p>If you don’t see a range above and the window looks exactly like the one above, that would mean that the DCOM port range is not configured on the machine.<br />
+You can click Add in the above window and type the range (let's say as 5000-5100) and say Ok. Make sure it looks like this. (Both the radio buttons should be selected for Internet Range)</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/PortRange5000_2.jpg"><img style="border-width: 0px" title="PortRange5000" src="{{ site.baseurl }}/assets/PortRange5000_thumb.jpg" alt="PortRange5000" width="346" height="349" border="0" /></a><br />
+You have to configure this range on both the machines and after that you have to <b>reboot both the servers</b> for this Range to take effect. <b>After doing that you have to open up the same range on your firewall bi-directionally</b>.</p>
+<p>Let's say you have already opened enough ports but still you get this error message. In this case you should run NETSTAT -anob on the machine which is returning this error message and try to find out which program is using all the ports. You should look for the ports that you have defined in the RPC Port range and look for all EXE's which are listening on that port range.</p>
+<p>We hope this article gives you enough insight on how to troubleshoot issues with MSDTC using the DTCPing tool and we hope that going further you should be able to troubleshoot and diagnose issues related to MSDTC on your own. If you still need assistance from us to solve any DTCPING errors that were talked about in the above blog, please feel free to collect the DTCPING log files from both the machine (where DTCPING was ran) and open up a Support Incident with Microsoft. We (the MSDTC support team) will be more than happy to provide you a timely resolution to the problem once we have the right data to look at.</p>
+<p>If you are interestedly to dig deeper in to the DCOM and the Firewall concepts, feel free to explore the following articles which talks about DCOM issues in general.</p>
+<ul>
+<li>DTCPING.exe download <a href="http://download.microsoft.com/download/d/0/0/d00c8f6b-135d-4441-a97b-9de16a1935c1/dtcping.exe">http://download.microsoft.com/download/d/0/0/d00c8f6b-135d-4441-a97b-9de16a1935c1/dtcping.exe</a></li>
+<li>Using Distributed COM with Firewalls <a href="http://msdn.microsoft.com/en-us/library/ms809327.aspx">http://msdn.microsoft.com/en-us/library/ms809327.aspx</a></li>
+<li>Configuring Microsoft Distributed Transaction Coordinator (DTC) to work through a firewall <a href="http://support.microsoft.com/kb/250367/en-us">http://support.microsoft.com/kb/250367/en-us</a></li>
+<li>Description of names and IP addresses that an MSDTC client in a cluster environment must have <a href="http://support.microsoft.com/kb/311846/en-us">http://support.microsoft.com/kb/311846/en-us</a></li>
+<li>Troubleshooting Problems with MSDTC <a href="http://msdn.microsoft.com/en-us/library/aa561924.aspx">http://msdn.microsoft.com/en-us/library/aa561924.aspx</a></li>
+</ul>

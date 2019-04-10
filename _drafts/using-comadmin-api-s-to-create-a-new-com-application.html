@@ -1,0 +1,45 @@
+---
+layout: post
+title: Using COMAdmin API's to create a new COM+ application
+date: 
+type: post
+parent_id: '0'
+published: false
+password: ''
+status: draft
+categories: []
+tags: []
+meta:
+  orig_url: http://blogs.msdn.microsoft.com/b/puneetgupta/archive/2008/07/05/using-comadmin-api-s-to-create-a-new-com-application.aspx
+  orig_site_id: '8970'
+  orig_post_id: '8692575'
+  orig_parent_id: '8692575'
+  orig_thread_id: '593238'
+  _wds_ratings_users: '0'
+  orig_application_key: puneetgupta
+  orig_post_author_id: '40240'
+  orig_post_author_username: puneetg
+  orig_post_author_created: Jul  8 2006 05:05:50:283AM
+  orig_is_approved: '0'
+  orig_attachment_count: '0'
+  orig_url_title: http://blogs.msdn.com/b/puneetgupta/archive/2008/07/05/using-comadmin-apis-to-create-a-new-com-application.aspx
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/"
+---
+<p>COM+ provides a rich set of API's which can be called to directly interact with the COM+ catalog. These API's can be used to add new components, modify existing compnents, add new COM+ applications, make changes to the existing COM+ applications, retrieving the COM+ settings on the local machine or the remote machine etc. etc.<br />I am including code for a sample VBS script that demonstrates how to create a new COM+ application in COM+ and how to add an existing DLL to that COM+ application.
+<p>The following sample script shows&nbsp;you&nbsp;how to create a new&nbsp;COM+ application and how to install a COM+ component inside that application&nbsp;</p>
+<table class="">
+<tbody>
+<tr>
+<td style="FONT-FAMILY: 'Courier New'; BACKGROUND-COLOR: lightgrey" class=""><font color="#0000ff" size="2">&nbsp;<br />Set</font><font size="2"> objComPlusCatalog = CreateObject("COMAdmin.COMAdminCatalog")<br /></font><font color="#0000ff" size="2">Set</font><font size="2"> objComPlusApplications = objComPlusCatalog.GetCollection("Applications")<br />objComPlusApplications.Populate<br />Wscript.Echo "Successfully populated the COM+ Applications list !!!"</p>
+<p></font><font color="#0000ff" size="2">Set</font><font size="2"> objNewComPlusApplication= objComPlusApplications.Add<br />objNewComPlusApplication.Value("Name") = "TEST_COM_Plus_Application"<br />objNewComPlusApplication.Value("Description") = "Name_of_COM+_APPLICATION"<br />objNewComPlusApplication.Value("CreatedBy") = "Company Name"<br />objNewComPlusApplication.Value("Identity") = "DomainUserName" </font><font color="#008000" size="2">'Give the right user name here<br /></font><font size="2">objNewComPlusApplication.Value("Password") = "Password" </font><font color="#008000" size="2">'Give the right password here<br /></font><font size="2">objNewComPlusApplication.Value("RunForever") = "Y" </font><font color="#008000" size="2">'This setting controls the Leave Running when Idle option<br /></font><font size="2">objNewComPlusApplication.Value("ApplicationAccessChecksEnabled") = </font><font color="#0000ff" size="2">true</font><font size="2"> </font><font color="#008000" size="2">'This setting controls the Enfore Access Checks for This application<br /></font><font size="2">objComPlusApplications.SaveChanges</p>
+<p>Wscript.Echo "Successfully created a new COM+ application !!!"</p>
+<p>objKeyOfNewComPlusApplication = objNewComPlusApplication.Key<br /></font><font color="#008000" size="2">'Call the InstallComponent Method to install a particular DLL to an existing COM+ Application<br />'In my example I am installing the component inside E:ComProjectsSimpleVbSimpleVb.dll to this application,you<br />'should modify this appropriately and provide the path for your DLL.<br /></font><font size="2">objComPlusCatalog.InstallComponent objKeyOfNewComPlusApplication, "E:ComProjectsSimpleVbSimpleVb.dll", "", ""<br />Wscript.Echo "Installed a new COM+ component to the application !!!"<br /></font></td>
+</tr>
+</tbody>
+</table>

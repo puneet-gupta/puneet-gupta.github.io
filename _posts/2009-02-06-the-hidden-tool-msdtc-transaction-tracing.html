@@ -1,0 +1,121 @@
+---
+layout: post
+title: The hidden tool - MSDTC Transaction Tracing
+date: 2009-02-06 09:16:50.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="The hidden tool &#8211; MSDTC Transaction Tracing" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=164" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="If you deal with MSDTC frequently, you might have noticed an option to toggle the tracing options for transactions in the MSDTC settings but I am not sure how many are really aware of what information is logged inside the trace file and how the trace file can be converted from a binary format to..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/SampleCode_thumb_1.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="The hidden tool &#8211; MSDTC Transaction Tracing" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=164" />
+    <meta name="twitter:description" content="If you deal with MSDTC frequently, you might have noticed an option to toggle the tracing options for transactions in the MSDTC settings but I am not sure how many are really aware of what information is logged inside the trace file and how the trace file can be converted from a binary format to..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/SampleCode_thumb_1.png" />
+  _wds_ratings_users: '1'
+  _wds_ratings_score: '5'
+  _wds_ratings_average: '5'
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2009/02/06/the-hidden-tool-msdtc-transaction-tracing/"
+---
+<p>If you deal with MSDTC frequently, you might have noticed an option to toggle the tracing options for transactions in the MSDTC settings but I am not sure how many are really aware of what information is logged inside the trace file and how the trace file can be converted from a binary format to a text format. The built in transaction tracing is one of the least famous (but yet a very powerful) feature of MSDTC diagnostics. This tracing logs information about various stages of transaction propagation and gives you enough information about the various outcomes of a transaction. Using this tracing, you can not only determine the various transaction managers or resource managers involved in a transaction but you can also determine the cause of a transaction abort.</p>
+<p>The transaction tracing becomes a powerful tool when the transactions are either taking too long to run or they are getting aborted intermittently and nothing inside your application is giving you any hint around why the transaction is getting aborted. If you observe one of the following errors inside your application, I recommend using the MSDTC transaction tracing to figure out more details about your transaction</p>
+<ul>
+<li>The Microsoft Distributed Transaction Coordinator (MS DTC) has cancelled the Distributed Transaction</li>
+<li>The transaction has been implicitly committed or aborted</li>
+</ul>
+<p>By default, only the long-lived transactions are traced. You can turn ON tracing for all transactions or aborted transactions based on the kind of issue you are troubleshooting. You just have to select the relevant checkboxes in the trace settings and tracing will take effect (no restart of MSDTC service is required to toggle these settings)</p>
+<p>The next important thing becomes collecting the trace in the right manner. It is always better to collect a trace which <strong><span style="text-decoration: underline">just</span></strong> contains information about the problem that you are troubleshooting because on a busy server the Transaction trace can contain a lot of transactions and it might become very difficult to find out which transaction outcome you are interested in. So this is how we like to collect a DTC Trace.</p>
+<ol>
+<li>Open up COMPONENT SERVICES and go to the properties of My Computer. Under the MSDTC tab, click on Tracing options. After that, click on<strong> Stop Session</strong> and then click on <strong>New Session </strong>button. This will generate a new file inside c:\windows\msdtc\trace folder with name like dtctrace.log.2008-12-03-11-04-52-0226-00. So this file would basically contain information about all the transactions which have already been traced up to this point and now a new session of MSDTC trace has been started which will start capturing the Tracing information as soon as you click New Session.</li>
+<li>Reproduce the problem inside the application.</li>
+<li>Now go back to the same dialog and click on <strong>Stop Session </strong>and <strong>New session</strong>. This will generate a trace file which should contain only the information about the transactions which were running while the issue was being reproduced. If your application is the only application using DTC, you can expect this log file to contain information about your transactions and analyzing the trace would be an easy job. If there are other transactions which were also running while the trace was turned ON, those will also be logged inside the file and looking at the transaction information you will have to figure out which transactions were initiated by your application.</li>
+</ol>
+<p>The MSDTC tracing is basically built on the ETW Tracing for windows and like every other ETW trace, it is a binary file which needs to be parsed using some tools. <span style="text-decoration: underline">Once you have got the DTC trace log file, you have to use two utilities inside the </span><a href="http://www.microsoft.com/downloads/details.aspx?familyid=49AE8576-9BB9-4126-9761-BA8011FABF38&amp;displaylang=en"><span style="text-decoration: underline">Windows XP Service pack 2 Support</span></a><span style="text-decoration: underline"> Tools (Tracefmt.exe and traceprt.dll) to parse the trace file.</span> <i>The sad part is that to get these utilities, you need a Windows XP machine because you can only install the <a href="http://www.microsoft.com/downloads/details.aspx?familyid=49AE8576-9BB9-4126-9761-BA8011FABF38&amp;displaylang=en">Windows XP Service pack 2 Support</a> Tools on a Windows XP machine. But after installing the setup <b>(make sure to choose the complete version of the setup)</b>, you can copy the Tracefmt.exe and traceprt.dll from “c:\Program Files \Support Tools” directory to any operating system</i>. To keep things easier, I always copy these two files to c:\windows\system32\msdtc\trace folder.</p>
+<p>The command used to parse the trace file is</p>
+<blockquote><p><strong><span style="color: #ff0000">msdtcvtr –tracelog &lt;NameofTheDtcTrace.log&gt; –o OutPutFile </span></strong></p></blockquote>
+<p>Running the above command will parse the binary trace file and generate a text file with the name OutputFile.csv which can be opened up in any text editor.</p>
+<p><strong><span style="text-decoration: underline"><span style="font-size: large">Important things to note regarding MSDTCVTR command</span></span></strong></p>
+<ol>
+<li>MSDTCVTR batch file launches <a href="http://msdn.microsoft.com/en-us/library/ms797564.aspx">TRACEFMT.exe</a> in the background passing the name of the DTCTRace.log file as one of the parameters. The TraceFMT.exe in turn uses tracerpt.dll to parse the trace file.</li>
+<li>TRACEFMT uses a MOF file called msdtctr(present in the same (C:\Windows\SYSTEM32\Msdtc\Trace) folder to parse the trace. This MOF file varies from operating system to operating system. If you run the MSDTCVTR command without the MOF switch, the MSDTCVTR.BAT file automatically picks up the C:\Windows\SYSTEM32\Msdtc\Trace\msdtctr.mof file and parses the trace as per this MOF. This means that if you collect a trace from a Windows 2003 machine and try to parse it on (let’s say), a Windows XP machine, the parsed output may be blank. To fix this problem, you can copy both the MSDTCTR.MOF file along with the DTC Trace file, that you collected earlier, to the machine where you are going to parse the file and while running the MSDTCVTR command, pass a <strong>-mof &lt;filename&gt;</strong> switch to obtain the right output.</li>
+<li>The time shown in the parsed output is as per the time zone of the machine where you “parsed” the trace file. This can become a bit confusing if the machine where the trace is collected and the machine where the trace is parsed are in a different time zone. So let’s say, you collected DTC trace on a machine which is in the Central Time zone and you are parsing the trace file on a machine which is in GMT time zone, the time field in the parsed output will be in the GMT format.</li>
+</ol>
+<p><span style="font-size: x-large"><strong><span style="text-decoration: underline">A Quick Walkthrough</span></strong></span></p>
+<p>To demonstrate the right way to collect a trace and to parse the same, I created a sample application using System.Transactions in .NET 2.0 and I am running the following code</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/SampleCode_1.png"><img style="border-width: 0px" title="SampleCode" src="{{ site.baseurl }}/assets/SampleCode_thumb_1.png" alt="SampleCode" width="572" height="228" border="0" /></a></p>
+<p>The code is pretty simple. I am just running a Select statement inside a TransactionScope and when the scope is disposed, I am expecting a Transaction to commit. But what I notice is that after I run the above code, my transaction is getting ABORTED (Anyone familiar with System.Transactions should be able to figure out what’s wrong in the above code snippet which ending up in Transaction abort )</p>
+<p>So under the transaction statistics in component services where as I expected the Transaction to commit, I can see that the transaction aborted.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/Transaction_Statistics.png"><img style="border-width: 0px" title="Transaction_Statistics" src="{{ site.baseurl }}/assets/Transaction_Statistics_thumb.png" alt="Transaction_Statistics" width="550" height="374" border="0" /></a></p>
+<p>Now being the application developer I might think that MSDTC is doing something wrong to my transaction. Well let’s just see what is happening in the background by turning ON some tracing. So I went inside component services and pulled up the MSDTC Tracing options and configured the tracing to trace for aborted transactions in this way</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/TracingOptions.png"><img style="border-width: 0px" title="TracingOptions" src="{{ site.baseurl }}/assets/TracingOptions_thumb.png" alt="TracingOptions" width="339" height="326" border="0" /></a></p>
+<p>After doing that I clicked <strong>Stop Session </strong>and <strong>New session </strong>to ensure that we have a new tracing session which will log all the transaction activity from now onwards. The moment I did this, a new file is generated in the c:\windows\system32\msdtc\trace folder.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/After_First_Stop_Session.png"><img style="border-width: 0px" title="After_First_Stop_Session" src="{{ site.baseurl }}/assets/After_First_Stop_Session_thumb.png" alt="After_First_Stop_Session" width="567" height="238" border="0" /></a></p>
+<p>At this point, we will just ignore this newly created file as it can contain information about other transactions which might have ran in the past in which we are not interested. After this I re-ran my application and made sure that the transaction did abort and now I come back to the tracing options tab and click on <strong>Stop Session </strong>and <strong>New Session </strong>again. At this point, this is how the c:\windows\system32\msdtc\trace folder looks like.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/After_Second_Stop_Session.png"><img style="border-width: 0px" title="After_Second_Stop_Session" src="{{ site.baseurl }}/assets/After_Second_Stop_Session_thumb.png" alt="After_Second_Stop_Session" width="579" height="255" border="0" /></a></p>
+<p>Notice that we are interested in the second file that was generated (dtctrace.log.2009-03-21-10-14-16-0011-00)  as that will contain information about the aborted transaction. Now we can parse this file using the MSDTCVTR batch file</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/MSDTCVTR.png"><img style="border-width: 0px" title="MSDTCVTR" src="{{ site.baseurl }}/assets/MSDTCVTR_thumb.png" alt="MSDTCVTR" width="559" height="319" border="0" /></a></p>
+<p>After parsing the file we will get the parsed output inside AbortedTrace.csv file and we can open it up in notepad to see what it contains. This is how the file looks like</p>
+<div style="border: 1px solid #7fbae2;width: 650px;margin-bottom: 10px">
+<div style="margin: 0px;padding: 0px;border: 0px solid #7fbae2;width: 400px">
+<pre>    pid=1052       ;tid=1128       ;time=03/21/2009-10:14:05.246   ;seq=14         ;eventid=TRACING_STARTED                          ;;"MSDTC is resuming the tracing of long - lived transactions"
+    pid=1052       ;tid=1128       ;time=03/21/2009-10:14:05.246   ;seq=15         ;eventid=TRANSACTION_BEGUN                        ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"transaction got begun, description : ''"
+    pid=1052       ;tid=1620       ;time=03/21/2009-10:14:05.246   ;seq=16         ;eventid=RM_ENLISTED_IN_TRANSACTION               ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"resource manager #1001 enlisted as transaction enlistment #1. RM guid = '5f9d03ca-2f03-49cf-9b17-7cb7962f0ef0'"
+    pid=1052       ;tid=1128       ;time=03/21/2009-10:14:05.261   ;seq=17         ;eventid=<strong><span style="color: #ff0000">RECEIVED_ABORT_REQUEST_FROM_BEGINNER</span></strong>     ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"received request to abort the transaction from beginner"
+    pid=1052       ;tid=1128       ;time=03/21/2009-10:14:05.261   ;seq=18         ;eventid=TRANSACTION_ABORTING                     ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"transaction is aborting"
+    pid=1052       ;tid=1128       ;time=03/21/2009-10:14:05.261   ;seq=19         ;eventid=RM_ISSUED_ABORT                          ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"abort request issued to resource manager #1001 for transaction enlistment #1"
+    pid=1052       ;tid=2572       ;time=03/21/2009-10:14:05.261   ;seq=20         ;eventid=RM_ACKNOWLEDGED_ABORT                    ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"received acknowledgement of abort request from the resource manager #1001 for transaction enlistment #1"
+    pid=1052       ;tid=2572       ;time=03/21/2009-10:14:05.261   ;seq=21         ;eventid=TRANSACTION_ABORTED                      ;tx_guid=35e57abd-1782-4fe2-ae59-01ffb0e9b628     ;"transaction has been aborted"</pre>
+</div>
+</div>
+<p>A careful review of the above file gives you the following information</p>
+<ol>
+<li>The transaction identifier for our transaction is <strong>35e57abd-1782-4fe2-ae59-01ffb0e9b628. </strong></li>
+<li>The transaction started at 03/21/2009-10:14:05.246 and got aborted at 03/21/2009-10:14:05.261</li>
+<li>The fifth column in the above file shows the various events that happened for this transaction and the 6th columns gives a descriptive information about that particular event. So going through the above file, we can see that the event of interest is <strong>RECEIVED_ABORT_REQUEST_FROM_BEGINNER</strong>  which tells us that the application which started the transaction is the one which sent an ABORT request to MSDTC for the transaction.</li>
+</ol>
+<p>So from this we can infer that we are doing something wrong in our application which is sending an ABORT request to MSDTC. Upon reviewing our code and going through the documentation of TransactionScope , we can see that we missed something very important. From <a href="http://msdn.microsoft.com/en-us/library/system.transactions.transactionscope.aspx">this</a> article (see TransactionScope class)</p>
+<blockquote><p><span style="color: #0000ff">“When your application completes all work it wants to perform in a transaction, you should call the </span><a href="http://msdn.microsoft.com/en-us/library/system.transactions.transactionscope.complete.aspx"><span style="color: #0000ff">Complete</span></a><span style="color: #0000ff"> method only once to inform that transaction manager that it is acceptable to commit the transaction. Failing to call this method aborts the transaction.”</span></p></blockquote>
+<p>And the right code becomes</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/ThehiddentoolMSDTCTransactionTracing_7E37/SampleCodeCorrected_1.png"><img style="border-width: 0px" title="SampleCodeCorrected" src="{{ site.baseurl }}/assets/SampleCodeCorrected_thumb_1.png" alt="SampleCodeCorrected" width="566" height="241" border="0" /></a></p>
+<p>The above example may not be the best one to give here but I am sure it will help you understand the basics of collecting a trace and how to parse it to retrieve the right information. The MSDTC trace can contain a lot of other events as well and I am pasting here some of the most common events that we see while parsing trace files from real time customer scenarios.</p>
+<table style="height: 1180px" border="1" width="1182" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top" width="163">ABORT_DUE_TO_TRANSACTION_TIMER_EXPIRED</td>
+<td valign="top" width="421">The Transaction is timing out because of the configured timeout for a transaction in DTC settings.</td>
+</tr>
+<tr>
+<td valign="top" width="163">RECEIVED_ABORT_REQUEST_FROM_BEGINNER</td>
+<td valign="top" width="421">The application which started the transaction issued an abort request to MSDTC to ABORT the transaction. In case of a transaction originating from a COM+ component, a call to ContextUtil.SetAbort will end up sending this event to MSDTC.</td>
+</tr>
+<tr>
+<td valign="top" width="163"><span style="font-size: xx-small">TRANSACTION_PROPOGATION_FAILED_CONNECTION_DOWN_FROM_REMOTE_TM</span></td>
+<td valign="top" width="421">This error is typically due to networking issues. This happens when MSDTC on one machine loses connection with MSDTC on the other machine. For more information on this event, refer <a href="http://support.microsoft.com/kb/922430">this</a> article.</td>
+</tr>
+<tr>
+<td valign="top" width="163">TRANSACTION_PROPAGATION_FAILED_TRANSACTION_NOT_FOUND</td>
+<td valign="top" width="421">This event happens when you try to commit or abort a transaction that has been already committed or aborted.</td>
+</tr>
+<tr>
+<td valign="top" width="163">RM_ENLIST_FAILED_TOO_MANY_ENLISTS</td>
+<td valign="top" width="421">DTC already has the maximum number of resources enlisted in the transaction. The maximum number of resources that can be enlisted in a transaction is 32. More information in <a href="http://msdn.microsoft.com/en-us/library/ms679810(VS.85).aspx">this</a> article.</td>
+</tr>
+</tbody>
+</table>

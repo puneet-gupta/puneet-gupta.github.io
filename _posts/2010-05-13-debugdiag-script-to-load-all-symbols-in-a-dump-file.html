@@ -1,0 +1,139 @@
+---
+layout: post
+title: DebugDiag script to load all symbols in a dump file
+date: 2010-05-13 17:52:00.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags:
+- DebugDiag
+- Debugging
+meta:
+  orig_url: http://blogs.msdn.microsoft.com/b/puneetgupta/archive/2010/05/14/debugdiag-script-to-load-all-symbols-in-a-dump-file.aspx
+  orig_site_id: '8970'
+  orig_post_id: '10012856'
+  orig_parent_id: '10012856'
+  orig_thread_id: '717000'
+  _wds_ratings_users: '0'
+  orig_application_key: puneetgupta
+  orig_post_author_id: '40240'
+  orig_post_author_username: puneetg
+  orig_post_author_created: Jul  8 2006 05:05:50:283AM
+  orig_is_approved: '1'
+  orig_attachment_count: '1'
+  orig_url_title: http://blogs.msdn.com/b/puneetgupta/archive/2010/05/13/debugdiag-script-to-load-all-symbols-in-a-dump-file.aspx
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="DebugDiag script to load all symbols in a dump file" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2010/05/13/debugdiag-script-to-load-all-symbols-in-a-dump-file/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="At times you really need to load symbols for all modules loaded in a dump either because you want to put a breakpoint on some function (which is not exported in a module or you want) or to see the right function names in call-stacks logged in the DebugDiag&#8217;s log file for debugging purposes. The..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/DebugDiagscripttoloadallsymbolsinadumpfi_5FBE/image_thumb.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="DebugDiag script to load all symbols in a dump file" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2010/05/13/debugdiag-script-to-load-all-symbols-in-a-dump-file/" />
+    <meta name="twitter:description" content="At times you really need to load symbols for all modules loaded in a dump either because you want to put a breakpoint on some function (which is not exported in a module or you want) or to see the right function names in call-stacks logged in the DebugDiag&#8217;s log file for debugging purposes. The..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/DebugDiagscripttoloadallsymbolsinadumpfi_5FBE/image_thumb.png" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2010/05/13/debugdiag-script-to-load-all-symbols-in-a-dump-file/"
+---
+<p>At times you really need to load <a href="http://www.microsoft.com/whdc/devtools/debugging/debugstart.mspx" target="_blank">symbols</a> for all modules loaded in a dump either because you want to put a breakpoint on some function (which is not exported in a module or you want) or to see the right function names in call-stacks logged in the DebugDiag's log file for debugging purposes. </p>
+<p>The existing Crash hang Analysis scripts load symbols for modules loaded in the process but they just don't load ALL the symbols. They only load symbols for modules that required to display in the report. Also the memory analysis scripts load symbols for modules which are required for looking at the memory allocations but the below script loads modules for ALL symbols loaded in the process </p>
+<table border="1">
+<tbody>
+<tr>
+<td>
+<div style="font-family: consolas; background: white; color: black; font-size: 10pt">
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span><span style="color: blue">@</span> <span style="color: red">Language</span> <span style="color: blue">=</span> <span style="color: blue">VBScript</span> <span style="background: yellow">%&gt;</span></pre>
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span><span style="color: blue">@</span> <span style="color: red">Category</span> <span style="color: blue">=</span> <span style="color: blue">Load</span> <span style="color: red">Symbols</span> <span style="background: yellow">%&gt;</span></pre>
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span><span style="color: blue">@</span> <span style="color: red">Description</span> <span style="color: blue">=</span> <span style="color: blue">Loading</span> <span style="color: red">symbols</span> <span style="color: red">for</span> <span style="color: red">all</span> <span style="color: red">modules</span> <span style="color: red">in</span> <span style="color: red">the</span> <span style="color: red">process</span> <span style="background: yellow">%&gt;</span></pre>
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span><span style="color: blue">@</span> <span style="color: red">TopLevelScript</span> <span style="color: blue">=</span> <span style="color: blue">True</span> <span style="background: yellow">%&gt;</span></pre>
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span> <span style="color: blue">Option</span> <span style="color: blue">Explicit</span> <span style="background: yellow">%&gt;</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px"><span style="background: yellow">&lt;%</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px"><span style="color: blue">Const</span> ANALYSIS_STEP_COUNT = 10</pre>
+<pre style="margin: 0px"><span style="color: blue">Dim</span> g_Debugger, g_DataFile, g_Progress,g_OverallProgress,intPosition, intLen,g_ShortDumpFileName</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px"><span style="color: blue">Set</span> g_Progress = Manager.Progress</pre>
+<pre style="margin: 0px">g_Progress.SetOverallRange 0, Manager.DataFiles.Count * ANALYSIS_STEP_COUNT</pre>
+<pre style="margin: 0px">g_Progress.OverallPosition = 0</pre>
+<pre style="margin: 0px">g_Progress.OverallStatus = <span style="color: maroon">""</span></pre>
+<pre style="margin: 0px">g_Progress.CurrentStatus = <span style="color: maroon">""</span></pre>
+<pre style="margin: 0px">g_Progress.CurrentPosition = 0</pre>
+<pre style="margin: 0px">g_OverallProgress = 0</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">g_Progress.OverallStatus = <span style="color: maroon">"Starting Analysis"</span></pre>
+<pre style="margin: 0px"><span style="color: #006400">' Main analysis and reporting loop. One iteration for each dump file</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">Manager.ReportInformation <span style="color: maroon">"This script is used to load symbols for all modules loaded in the dump file"</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px"><span style="color: blue">For</span> <span style="color: blue">Each</span> g_DataFile <span style="color: blue">In</span> Manager.DataFiles</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; <span style="color: blue">If</span> (UCase(Right(g_DataFile,4)) = <span style="color: maroon">".DMP"</span>) <span style="color: blue">Then</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">Set</span> g_Debugger = Manager.GetDebugger(g_DataFile)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">If</span> <span style="color: blue">Not</span> g_Debugger <span style="color: blue">Is</span> <span style="color: blue">Nothing</span> <span style="color: blue">Then</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: #006400">'Trim g_DataFile down to just the filename itself for later use</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; intPosition = InStrRev(g_DataFile, <span style="color: maroon">"\"</span>, -1, 1)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; intLen = <span style="color: blue">Len</span>(g_DataFile)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_ShortDumpFileName = Right(g_DataFile, intLen - intPosition)</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: #006400">'Go ahead and get any extension objects we'll need later</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_Progress.OverallStatus = <span style="color: maroon">"Loading symbols for dump "</span> &amp; g_ShortDumpFileName</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_Debugger.Execute(<span style="color: maroon">"!symfix c:\symcache"</span>)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_Debugger.Execute(<span style="color: maroon">".reload"</span>)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_Debugger.Execute(<span style="color: maroon">"ld*"</span>)</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Manager.Write <span style="color: maroon">"&lt;h3&gt; Finished Loading symbols for the dump file - "</span> &amp; g_DataFile &amp; <span style="color: maroon">"&lt;h3&gt;"</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">Else</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Manager.ReportError <span style="color: maroon">"Unable to open the file "</span> &amp; g_DataFile &amp; <span style="color: maroon">" for analysis."</span>, <span style="color: maroon">"The file is probably "</span> &amp;_</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: maroon">"corrupt, and a new dump file of the targeted process will have to be created to do any analysis."</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">End</span> <span style="color: blue">If</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; Manager.CloseDebugger g_DataFile</pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; <span style="color: blue">End</span> <span style="color: blue">If</span></pre>
+<pre style="margin: 0px"><span style="color: blue">Next</span></pre>
+<pre style="margin: 0px">&nbsp;</pre>
+<pre style="margin: 0px"><span style="background: yellow">%&gt;</span></pre>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<p><p>&nbsp; </p>
+<p>Just copy the above code and create a new file in C:\Program Files\DebugDiag\Scripts folder and call it LoadSymbols.asp (or download the LoadSymbols.zip file attached to this blog). Once done, the Debug Diagnostic tool UI will show you this script and you can choose dump files whole modules you want to load in the local cache and click on Start Analysis.</p>
+<p>&nbsp;<a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/DebugDiagscripttoloadallsymbolsinadumpfi_5FBE/image_2.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/DebugDiagscripttoloadallsymbolsinadumpfi_5FBE/image_2.png"><img style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" title="image" border="0" alt="image" src="{{ site.baseurl }}/assets/image_thumb.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/DebugDiagscripttoloadallsymbolsinadumpfi_5FBE/image_thumb.png" width="644" height="253" /></a> </p>
+<p>&nbsp;</p>
+<p>Once the script finishes you should see all the symbols downloaded in the the <strong>c:\symcache</strong> folder.</p>
+<p>&nbsp;</p>
+<p>
+<form></form></p>
+<p>Also notice that using the same way you can write whatever debug scripts you want for analyzing your dump. In the above script there is a for loop which is iterating through every dump file that the user selects in the DebugDiag tool UI. </p>
+<p><span style="color: blue">For</span> <span style="color: blue">Each</span> g_DataFile <span style="color: blue">In</span> Manager.DataFiles</p>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; <span style="color: blue">If</span> (UCase(Right(g_DataFile,4)) = <span style="color: maroon">".DMP"</span>) <span style="color: blue">Then</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">Set</span> g_Debugger = Manager.GetDebugger(g_DataFile)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">If</span> <span style="color: blue">Not</span> g_Debugger <span style="color: blue">Is</span> <span style="color: blue">Nothing</span> <span style="color: blue">Then</span></pre>
+<pre style="margin: 0px; background: yellow">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; g_Debugger.Execute(<span style="color: maroon">"vertarget"</span>)</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">Else</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Manager.ReportError <span style="color: maroon">"Unable to open the file "</span> &amp; g_DataFile &amp; <span style="color: maroon">" for analysis."</span>, <span style="color: maroon">"The file is probably "</span> &amp;_</pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: maroon">"corrupt, and a new dump file of the targeted process will have to be created to do any analysis."</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue">End</span> <span style="color: blue">If</span></pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; Manager.CloseDebugger g_DataFile&nbsp;&nbsp;&nbsp; </pre>
+<pre style="margin: 0px">&nbsp;&nbsp;&nbsp; <span style="color: blue">End</span> <span style="color: blue">If</span></pre>
+<pre style="margin: 0px"><span style="color: blue">Next</span></pre>
+<tbody></tbody></p>
+<div></div>
+</table>
+<p>The light highlighted in yellow above shows a call to g_Debugger.Execute() which executes a debugger command and returns you the output of that command. For e.g. the above line will call vertarget on the dump file. For more information on this method, go through the documentation (DebugDiag.chm) that comes with the DebugDiag tool and look for the DbgObj object.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/10/01/28/56/LoadSymbols.zip" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/communityserver-components-postattachments/00-10-01-28-56/LoadSymbols.zip">LoadSymbols.zip</a></p>

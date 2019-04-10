@@ -1,0 +1,99 @@
+---
+layout: post
+title: Where is the Client Certificates UI in IIS 7.0 ?
+date: 2009-08-03 09:42:00.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags:
+- IIS7
+meta:
+  orig_url: http://blogs.msdn.microsoft.com/b/puneetgupta/archive/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0.aspx/%20rel=/nofollow/http:/blogs.msdn.com/b/puneetgupta/archive/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0.aspx
+  orig_site_id: '8970'
+  orig_post_id: '9856231'
+  orig_parent_id: '9856231'
+  orig_thread_id: '669632'
+  _wds_ratings_users: '0'
+  orig_application_key: puneetgupta
+  orig_post_author_id: '40240'
+  orig_post_author_username: puneetg
+  orig_post_author_created: Jul  8 2006 05:05:50:283AM
+  orig_is_approved: '1'
+  orig_attachment_count: '1'
+  orig_url_title: http://blogs.msdn.com/b/puneetgupta/archive/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0.aspx
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Where is the Client Certificates UI in IIS 7.0 ?" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="One of the things which I found missing in the IIS 7.0 user interface was the UI which lets you configure the Client certificate mappings for IIS. In the present world, if you want to configure the client certificate mappings for a web site, you will have to use the configuration editor and specify the..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Where is the Client Certificates UI in IIS 7.0 ?" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0/" />
+    <meta name="twitter:description" content="One of the things which I found missing in the IIS 7.0 user interface was the UI which lets you configure the Client certificate mappings for IIS. In the present world, if you want to configure the client certificate mappings for a web site, you will have to use the configuration editor and specify the..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb.png" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2009/08/03/where-is-the-client-certificates-ui-in-iis-7-0/"
+---
+<p>One of the things which I found missing in the IIS 7.0 user interface was the UI which lets you configure the Client certificate mappings for IIS. In the present world, if you want to configure the client certificate mappings for a web site, you will have to use the configuration editor and specify the certificate blob and configure the client certificate as per this <a href="http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx" mce_href="http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx">blog</a>. At times, getting the certificate blog in a single line itself can get tricky and it might help to just have a UI which IIS 6.0 for this configuration.</p>
+<p>Though the client certificate mapping UI feature was not present in IIS 7.0, <strong>the IIS 7.0 UI extensibility is so powerful</strong> that it is easy to write something like that. I went through some of the blogs that had samples for UI Extensibility and was able to create a sample UI module that adds this functionality in the UI. </p>
+<p>Once you install the MSI (for right CPU), you will be able to see this UI module in the IIS manager. This is how it shows up in the UI.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_2.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_2.png" mce_href="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_2.png"><img title="image" style="BORDER-RIGHT: 0px; BORDER-TOP: 0px; DISPLAY: inline; BORDER-LEFT: 0px; BORDER-BOTTOM: 0px" height="265" alt="image" src="{{ site.baseurl }}/assets/image_thumb.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb.png" width="644" border="0" mce_src="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb.png" /></a> </p>
+<p>I tried ensuring that the UI for client certificate configuration looks exactly the same as configuration interface in IIS 6.0 so if you are already familiar with configuring the client certificate mappings in IIS 6.0, you should be able to directly use this and configure the client certificate mappings quickly.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_4.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_4.png" mce_href="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_4.png"><img title="image" style="BORDER-RIGHT: 0px; BORDER-TOP: 0px; DISPLAY: inline; BORDER-LEFT: 0px; BORDER-BOTTOM: 0px" height="476" alt="image" src="{{ site.baseurl }}/assets/image_thumb_1.png" original-url="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb_1.png" width="644" border="0" mce_src="http://blogs.msdn.com/blogfiles/puneetgupta/WindowsLiveWriter/WhereistheClientCertificatesUIinIIS7.0_10E1D/image_thumb_1.png" /></a> </p>
+<p><strong><u>Download Location</u></strong></p>
+<p>Find the zip file attached below to this blog and run the right version (x86 or x64) on your server to install this module.</p>
+<p><u>What does the installer do?</u></p>
+<ol>
+<li>The installer copies a file ClientCertificateMapping.dll to inetsrv\ClientcertificateMapping folder on your IIS server.</li>
+<li>It registers the ClientCertificateMapping.dll in the GAC on the server.</li>
+<li>It modifies the application host.config and adds the two statements in there.</li>
+</ol>
+<blockquote>
+<p>Under the <span style="FONT-SIZE: 11pt; FONT-FAMILY: Courier New" __designer:dtid="281474976710673">&lt;moduleProviders&gt;</span> section</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p><font face="Courier New">&lt;add name="ClientCertificateMapping" type="ClientCertificateMapping.ClientCertificateMappingModuleProvider, ClientCertificateMapping, Version=1.0.0.0, Culture=neutral, PublicKeyToken=44f73143bf16e268" /&gt;</font></p>
+</blockquote>
+<p>And under the <span style="FONT-SIZE: 11pt; FONT-FAMILY: Courier New" __designer:dtid="281474976710673">&lt;modules&gt;</span>section</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<p><font face="Courier New"><span style="FONT-SIZE: 10pt; FONT-FAMILY: Courier New" __designer:dtid="281474976710676">&lt;add name="ClientCertificateMapping" /&gt;</span></font></p>
+</blockquote>
+</blockquote>
+<p>Note: This tool will just let you configure the client certificate mappings. To make sure that the client certificate mappings works as expected, you might have to review the other settings that are are mentioned in the following links.</p>
+<ol>
+<li><a title="http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx" href="http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx" mce_href="http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx">http://blogs.iis.net/rlucero/archive/2008/05/23/iis-7-walkthrough-one-to-one-client-certificate-mapping-configuration.aspx</a></li>
+<li><a title="http://blogs.msdn.com/saurabh_singh/archive/2007/06/09/client-certificate-revisited-how-to-troubleshoot-client-certificate-related-issues.aspx" href="http://blogs.msdn.com/saurabh_singh/archive/2007/06/09/client-certificate-revisited-how-to-troubleshoot-client-certificate-related-issues.aspx" mce_href="http://blogs.msdn.com/saurabh_singh/archive/2007/06/09/client-certificate-revisited-how-to-troubleshoot-client-certificate-related-issues.aspx">http://blogs.msdn.com/saurabh_singh/archive/2007/06/09/client-certificate-revisited-how-to-troubleshoot-client-certificate-related-issues.aspx</a></li>
+</ol>
+<p>Some of the <u>limitations</u> of this UI module (as I see today)</p>
+<ul>
+<li>I just managed to write the functionality for one-one client certificate mapping. To be very frank, I have never seen many people using the one-to-many mapping feature anyways. But based on the user-feedback, I may spend some time writing up the UI for many-to-one mapping as well.</li>
+<li>I wasn't able to do too much testing around this functionality. If you come across any issues, do let me know via this blog entry</li>
+<li>There is no BROWSE button when you click the Add Mapping button. I researched a little bit and came to know that generating a object browser dialog box and using the <em>IDsObjectPicker</em> interface in .net requires too much of code. I found some very good sample at <a href="http://www.codeplex.com/ADUI" mce_href="http://www.codeplex.com/ADUI">codeplex</a> but realized that it is too much of code and it requires a lot of Interop and Pinvoke code. For the time being, I have not used this functionality and let the user explicitly type in the user name but if this turns out to be a requirement, I can easily add it later.</li>
+<li>Any other issues you facing using this, please let me know :)</li>
+</ul>
+<p>In the end, I just wanted to share some of the great resources that I came across while writing this module (and creating an installer for the same)</p>
+<ol>
+<li><a title="http://blogs.msdn.com/tess/archive/2008/08/28/creating-a-ui-module-for-iis7-to-watch-current-requests.aspx" href="http://blogs.msdn.com/tess/archive/2008/08/28/creating-a-ui-module-for-iis7-to-watch-current-requests.aspx" mce_href="http://blogs.msdn.com/tess/archive/2008/08/28/creating-a-ui-module-for-iis7-to-watch-current-requests.aspx">http://blogs.msdn.com/tess/archive/2008/08/28/creating-a-ui-module-for-iis7-to-watch-current-requests.aspx</a></li>
+<li><a title="http://learn.iis.net/page.aspx/441/understanding-ui-extension-authoring/" href="http://learn.iis.net/page.aspx/441/understanding-ui-extension-authoring/" mce_href="http://learn.iis.net/page.aspx/441/understanding-ui-extension-authoring/">http://learn.iis.net/page.aspx/441/understanding-ui-extension-authoring/</a></li>
+<li><a title="http://learn.iis.net/page.aspx/175/how-to-get-started-extending-module-properties-iis-7-iis-manager/" href="http://learn.iis.net/page.aspx/175/how-to-get-started-extending-module-properties-iis-7-iis-manager/" mce_href="http://learn.iis.net/page.aspx/175/how-to-get-started-extending-module-properties-iis-7-iis-manager/">http://learn.iis.net/page.aspx/175/how-to-get-started-extending-module-properties-iis-7-iis-manager/</a></li>
+</ol>
+<p>These links are specifically for creating the installer for this UI module</p>
+<ol>
+<li><a href="http://blogs.msdn.com/nikhiln/archive/2007/04/25/post-build-script-to-fix-msi-issues-in-vista-for-vs-2005-setup-and-deployment-project.aspx" mce_href="http://blogs.msdn.com/nikhiln/archive/2007/04/25/post-build-script-to-fix-msi-issues-in-vista-for-vs-2005-setup-and-deployment-project.aspx">http://blogs.msdn.com/nikhiln/archive/2007/04/25/post-build-script-to-fix-msi-issues-in-vista-for-vs-2005-setup-and-deployment-project.aspx</a></li>
+<li><a href="http://blogs.msdn.com/heaths/archive/2006/02/01/64-bit-managed-custom-actions-with-visual-studio.aspx" mce_href="http://blogs.msdn.com/heaths/archive/2006/02/01/64-bit-managed-custom-actions-with-visual-studio.aspx">http://blogs.msdn.com/heaths/archive/2006/02/01/64-bit-managed-custom-actions-with-visual-studio.aspx</a></li>
+<li><a title="http://blogs.msdn.com/carlosag/archive/2008/11/10/CreatingSetupProjectForIISusingVisualStudio2008.aspx" href="http://blogs.msdn.com/carlosag/archive/2008/11/10/CreatingSetupProjectForIISusingVisualStudio2008.aspx" mce_href="http://blogs.msdn.com/carlosag/archive/2008/11/10/CreatingSetupProjectForIISusingVisualStudio2008.aspx">http://blogs.msdn.com/carlosag/archive/2008/11/10/CreatingSetupProjectForIISusingVisualStudio2008.aspx</a></li>
+</ol>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/09/85/62/31/ClientCertificateMapping.zip" original-url="http://blogs.msdn.com/cfs-file.ashx/__key/communityserver-components-postattachments/00-09-85-62-31/ClientCertificateMapping.zip">ClientCertificateMapping.zip</a></p>

@@ -1,0 +1,70 @@
+---
+layout: post
+title: Having troubles with FTP's "Isolate Users with Active Directory" Isolation
+  Mode in IIS 6.0
+date: 2007-08-20 10:48:00.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags:
+- IIS6
+meta:
+  orig_url: http://blogs.msdn.microsoft.com/b/puneetgupta/archive/2007/08/20/having-troubles-with-ftp-s-isolate-users-with-active-directory-isolation-mode-in-iis-6-0.aspx
+  orig_site_id: '8970'
+  orig_post_id: '4480466'
+  orig_parent_id: '4480466'
+  orig_thread_id: '530791'
+  _wds_ratings_users: '0'
+  orig_application_key: puneetgupta
+  orig_post_author_id: '40240'
+  orig_post_author_username: puneetg
+  orig_post_author_created: Jul  8 2006 05:05:50:283AM
+  orig_is_approved: '1'
+  orig_attachment_count: '0'
+  orig_url_title: http://blogs.msdn.com/b/puneetgupta/archive/2007/08/20/having-troubles-with-ftps-isolate-users-with-active-directory-isolation-mode-in-iis-6-0.aspx
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Having troubles with FTP&#8217;s &quot;Isolate Users with Active Directory&quot; Isolation Mode in IIS 6.0" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2007/08/20/having-troubles-with-ftps-isolate-users-with-active-directory-isolation-mode-in-iis-6-0/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="The most common problem I have seen that people come across when they use the Isolate Users with Active Directory isolation mode in FTP (in IIS 6.0) is the classic Home Directory Inaccessible error message.If you try browsing to the FTP site from command prompt, you get an error message &nbsp;530 User &lt;Domain&gt;&lt;UserName&gt; cannot log..." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Having troubles with FTP&#8217;s &quot;Isolate Users with Active Directory&quot; Isolation Mode in IIS 6.0" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2007/08/20/having-troubles-with-ftps-isolate-users-with-active-directory-isolation-mode-in-iis-6-0/" />
+    <meta name="twitter:description" content="The most common problem I have seen that people come across when they use the Isolate Users with Active Directory isolation mode in FTP (in IIS 6.0) is the classic Home Directory Inaccessible error message.If you try browsing to the FTP site from command prompt, you get an error message &nbsp;530 User &lt;Domain&gt;&lt;UserName&gt; cannot log..." />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2007/08/20/having-troubles-with-ftps-isolate-users-with-active-directory-isolation-mode-in-iis-6-0/"
+---
+<p>The most common problem I have seen that people come across when they use the Isolate Users with Active Directory isolation mode in FTP (in IIS 6.0) is the classic Home Directory Inaccessible error message.If you try browsing to the FTP site from command prompt, you get an error message</p>
+<p>&nbsp;530 User &lt;Domain&gt;\&lt;UserName&gt; cannot log in, home directory inaccessible.<br />Login failed.</p>
+<p>The most common reasons for why you see this message are :- </p>
+<blockquote>
+<p>1. The msIIS-FTPDir or msIIS-FTPRoot properties for the User Account that is trying to access the FTP site are not configured in the Active Directory.<br />2. The account that is set in the IIS Metabase as the ADConnectionsUserName key for the FTP site is having some problems. It may be locked out or is not having the permissions to query the Active Directory<br />3. The password for account connecting to AD in ADConnectionsPassword is incorrect. <br />4. The IIS server is not able to contact the Active Directory.</p>
+</blockquote>
+<p>&nbsp;To resolve this problem...</p>
+<p>1. Make sure that msIIS-FTPDir and msIIS-FTPRoot properties for the user account are configured properly. To do this, open up a command prompt on the IIS server and browse to c:\winnt\system32 folder. Run the following command</p>
+<blockquote>
+<p>C:\WINDOWS\system32&gt;iisftp.vbs /GetADProp &lt;username&gt; FTPDir<br />C:\WINDOWS\system32&gt;iisftp.vbs /GetADProp &lt;username&gt; FTPRoot</p>
+</blockquote>
+<blockquote>
+<p>If you get a valid FTPDir and FTPRoot returned as a result of this command, which means these properties are set correctly. If the result of either of the commands is something like <br />The value of FTPDir for user &lt;username&gt; is:<br />null<br />This means that the FTPDir and FTPRoot are not set correctly. You can set them in this way.</p>
+</blockquote>
+<blockquote>
+<p>C:\WINDOWS\system32&gt;iisftp.vbs /SetADProp testusername FTPDir testdir<br />C:\WINDOWS\system32&gt;iisftp.vbs /SetADProp testusername FTPRoot c:\FTPRoot</p>
+</blockquote>
+<p>How the home directory is determined is by adding FTPRoot + “\” + FTPDir<br />In the above example the user with the name testusername will be taken to c:\FTPRoot\testdir</p>
+<p>Note: You can even specify a UNC share in the FTPRoot properties. So suppose for a domain user testuser, you set FTPDir as testdir and FTPRoot as <a href="file://server/share" mce_href="file://server/share">\\server\share</a> so he will be taken to <a href="file://server/share/testdir" mce_href="file://server/share/testdir">\\server\share\testdir</a> when he will login to the FTP Site.</p>
+<p>2. Other problem could be the account that you have used in the Metabase as your ADConnectionsUserName is having some problems. To figure out the settings in the Metabase for your FTP AD Isolation mode site, you can run the following script.<br />&nbsp;strComputer = "."<br />&nbsp;strFTPSiteName = "Default FTP Site" ‘ Specify Site Name here as it shows in the IIS Manager.<br />&nbsp;Set objWMIService = GetObject("winmgmts:{authenticationLevel=pktPrivacy}\\" &amp; strComputer &amp; "\root\microsoftiisv2")<br />&nbsp;Set colItems = objWMIService.ExecQuery("Select * from IIsFtpServerSetting") 'where ServerComment = " &amp; strFTPSiteN<br />&nbsp;For Each objItem in colItems<br />&nbsp;&nbsp;if objItem.ServerComment = strFTPSiteName then<br />&nbsp;&nbsp;&nbsp;Wscript.Echo "AD Connections Password: " &amp; objItem.ADConnectionsPassword<br />&nbsp;&nbsp;&nbsp;Wscript.Echo "AD Connections User Name: " &amp; objItem.ADConnectionsUserName<br />&nbsp;&nbsp;end if<br />&nbsp;Next</p>
+<p>This will give you the user name and password for the configured FTP site. </p>
+<blockquote>
+<p>&nbsp;1. Make sure that the password is correct and that the account is not locked out. <br />&nbsp;2. Also ensure that the account that is configured here has enough permissions to query the Active Directory.</p>
+</blockquote>
+<p>3. Another problem could be that the IIS server is not able to contact the Active Directory which might indicate a networking issue. You can try running a simultaneous netmon trace between the IIS machine and the domain controller to dig further as to what might be going wrong.</p>

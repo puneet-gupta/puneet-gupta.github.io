@@ -1,0 +1,72 @@
+---
+layout: post
+title: Server.CreateObject failed while checking permissions
+date: 2008-01-19 03:47:00.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags:
+- COM+
+meta:
+  orig_url: http://blogs.msdn.microsoft.com/b/puneetgupta/archive/2008/01/19/server-createobject-failed-while-checking-permissions.aspx
+  orig_site_id: '8970'
+  orig_post_id: '7159484'
+  orig_parent_id: '7159484'
+  orig_thread_id: '558794'
+  _wds_ratings_users: '0'
+  orig_application_key: puneetgupta
+  orig_post_author_id: '40240'
+  orig_post_author_username: puneetg
+  orig_post_author_created: Jul  8 2006 05:05:50:283AM
+  orig_is_approved: '1'
+  orig_attachment_count: '0'
+  orig_url_title: http://blogs.msdn.com/b/puneetgupta/archive/2008/01/19/server-createobject-failed-while-checking-permissions.aspx
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Server.CreateObject failed while checking permissions" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/01/19/server-createobject-failed-while-checking-permissions/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="Server object, ASP 0178 (0x80070005) The call to Server.CreateObject failed while checking permissions. Access is denied to this object. /MathsLibrary.asp, line 3 This is&nbsp;one of the most common errors that I have come across when anyone over tries to use their newly developed DCOM or COM+ Components. The error will come only after you have..." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Server.CreateObject failed while checking permissions" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/01/19/server-createobject-failed-while-checking-permissions/" />
+    <meta name="twitter:description" content="Server object, ASP 0178 (0x80070005) The call to Server.CreateObject failed while checking permissions. Access is denied to this object. /MathsLibrary.asp, line 3 This is&nbsp;one of the most common errors that I have come across when anyone over tries to use their newly developed DCOM or COM+ Components. The error will come only after you have..." />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2008/01/19/server-createobject-failed-while-checking-permissions/"
+---
+<pre>        Server object, ASP 0178 (0x80070005)
+        The call to Server.CreateObject failed while checking permissions. Access is denied to this object.
+        /MathsLibrary.asp, line 3
+</pre>
+<p>This is&nbsp;one of the most common errors that I have come across when anyone over tries to use their newly developed DCOM or COM+ Components. The error will come only after you have applied sp1 or sp2 for Windows 2003 or any service pack post sp2 on Windows XP. This happens basically because of some enhanced DCOM security which is introduced in the service pack.</p>
+<p><strong>The COM+ Server and the client are on the same machine</strong></p>
+<p>If the both the client and the COM+ Server are on the same server, check if Enable Access Checks for this application is selected or not . If it is selected then the user under whose context the call to the COM+ component is made, should be a part of the Roles section for that COM+ Component. An easy way to find out the user under whose context the call to the COM+ Component is failing is to Enable extra logging as per the <a href="http://support.microsoft.com/?id=892500">http://support.microsoft.com/?id=892500</a>&nbsp;and add ActivationFailureLoggingLevel and CallFailureLoggingLevel registry keys and you might get an event like this in the event viewer.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Event Type:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Error<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Event Source:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DCOM<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Event Category:&nbsp;&nbsp;&nbsp; None<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Event ID: 10016<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12/22/2006<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1:39:08 PM<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; User&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DISTSVCINDIA\IUSR_W2003ENTSP1<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Computer&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DISTSVCINDIA<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Description:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The application-specific permission settings do not grant Local Activation permission for the COM Server application with CLSID <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {6AC14250-1C8C-48BC-AFBC-22378C3EC7CA} to the user DISTSVCINDIA\IUSR_W2003ENTSP1 SID &lt;SID&gt; This security permission can be <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;modified using the Component Services administrative tool.</p>
+<p>So if you want the COM+ Role based security, just add the user name that you determined in the above step to the Roles for the COM+ Application and that should take care of it, otherwise you can just uncheck the <strong>Enable Access Checks for this application</strong> option which will end up disabling the COM+ Role based security completely.</p>
+<p>If this step alone doesnt fix the issue, that would mean that the user listed in the above error doesnt have proper DCOM permissions and to give that particular user proper DCOM permissions, you will have to add the user to the DISTRIBUTED COM USERS group (A group which was specifically introduced in Windows 2003 sp1 for this sole purpose only)</p>
+<p><strong>If the COM+ Server and the client are on a different server (and the client is basically a web server running IIS 6.0)</strong></p>
+<p>You have a COM+ Server and you have exported it into a proxy MSI. After exporting the proxy MSI you install it on your web server and then you get the above error. In this case a lot matter on whether your web server is a Windows 2003 machine or not. If it is a windows 2003 machine you can follow Method 2 of the KB 889830 to bring it to the same level as a Windows 2000 machine (IIS 6.0 changes the <a class="create" title="Click here to create this topic" href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.LogonMethod&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions" mce_href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.LogonMethod&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions">LogonMethod</a>, before IIS 6.0 the user that would be used to active the remote COM+ application was ANONYMOUS LOGON. Post IIS 6.0 for anonymous account the LOCAL IUSR account is used. Since this IUSR account is a local account and not known to the remote COM+ server the logon fails and hence the COM calls fails. </p>
+<p>You might also get a DCOM error like the above one in the event viewer of your machine. The USER name now will point to the IUSR account on the local server (web server). If you are getting that, go to COMPONENT SERVICES-&gt;My Computer. Right click and choose COM Security. Click on Edit Default (under launch and activation permissions) and then add the local IUSR account there and give it all kinds of activations. REBOOT THE BOX AFTER THIS</p>
+<p>Ensure that you have fixed all errors on the web server’s machine and only then start looking for errors on the COM+ Server. If you changed the <a class="create" title="Click here to create this topic" href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.LogonMethod&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions" mce_href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.LogonMethod&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions">LogonMethod</a> to 2 on your Windows 2003 machine (if it is Windows 2000 it is already 2), it is possible that your COM Call still fails on the remote server. The first thing to check in such a case is security audits on the Application Server. If you see the success audit in the event viewer and you are able to see the WORKSTATION name of the remote server, then it means that user from your web server is able to login to your application server. If you have not followed 889830 you will notice some failure audits here.</p>
+<p>If <a class="create" title="Click here to create this topic" href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.AnonymousLOGON&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions" mce_href="http://distsvcindia/wikiedit.aspx?topic=SampleNamespaceOne.AnonymousLOGON&amp;return=SampleNamespaceOne.ServerCreateObjectFailedWhileCheckingPermissions">AnonymousLOGON</a> is having some problems an error like this can occur in the SYSTEM LOG on the application server.</p>
+<pre>        Event Type:       Error
+        Event Source:    DCOM
+        Event Category: None
+        Event ID:          10027
+        Date                12/22/2006
+        Time                2:19:00 PM
+        User                NT AUTHORITY\ANONYMOUS LOGON
+        Computer         DISTSVCINDIA
+        Description
+        The machine wide limit settings do not grant Remote Activation permission for COM Server applications to the user NT AUTHORITY\ANONYMOUS 
+        LOGON SID (S-1-5-7).  This security permission can be modified using the Component Services administrative tool.
+</pre>
+<p>As an easy fix add ANONYMOUS LOGON to Distributed COM Users (available on Windows 2003). For other OS you might want to add ANONYMOUS LOGON to both Edit Limits and Edit Defaults in the Activation Section and give full activation permission. I recommend rebooting the machine after making machine wide changes in DCOM settings</p>

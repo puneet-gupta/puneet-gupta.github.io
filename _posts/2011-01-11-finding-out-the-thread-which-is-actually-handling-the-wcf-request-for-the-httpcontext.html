@@ -1,0 +1,347 @@
+---
+layout: post
+title: Finding out the Thread which is actually handling the WCF request for the HttpContext
+date: 2011-01-11 09:06:54.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Finding out the Thread which is actually handling the WCF request for the HttpContext" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=154" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="In the recent past, the PSSCOR2 debugger extension was made public. This debugger extension contains a very useful command called !aspxpages which shows you information about various asp.net requests running in the dump, the time they have been executing and the thread associated with the System.Web.HttpContext. Here is an example of what this command shows..." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Finding out the Thread which is actually handling the WCF request for the HttpContext" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=154" />
+    <meta name="twitter:description" content="In the recent past, the PSSCOR2 debugger extension was made public. This debugger extension contains a very useful command called !aspxpages which shows you information about various asp.net requests running in the dump, the time they have been executing and the thread associated with the System.Web.HttpContext. Here is an example of what this command shows..." />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2011/01/11/finding-out-the-thread-which-is-actually-handling-the-wcf-request-for-the-httpcontext/"
+---
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">In the recent past, the <a title="PSSCOR2" href="http://www.microsoft.com/downloads/en/details.aspx?FamilyID=5c068e9f-ebfe-48a5-8b2f-0ad6ab454ad4&amp;displayLang=en">PSSCOR2 </a>debugger extension was made public. This debugger extension contains a very useful command called <strong><span style="font-family: 'Calibri','sans-serif'">!aspxpages </span></strong>which shows you information about various asp.net requests running in the dump, the time they have been executing and the thread associated with the System.Web.HttpContext. Here is an example of what this command shows you </span></p>
+<p>&nbsp;</p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">0:000&gt; !aspxpages
+Going to dump the HttpContexts found in the heap.
+Loading the heap objects into our cache.
+HttpContext    Timeout  Completed     Running  ThreadId ReturnCode   Verb RequestPath+QueryString
+0x01bbf914    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc0ba4    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc17c4    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc4660    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc56a4    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc6660    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc76a4    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc8660    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bc96a4    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bca6fc    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bcb740    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bcc6fc    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bcd740    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bce6fc    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bcf740    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bd0784    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bd17c8    11647 Sec        no        29 Sec      27        200   POST /MySleepingWcfService/Service.svc 
+0x01bd2814    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bd3858    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01bd4814    11647 Sec        no        29 Sec      29        200   POST /MySleepingWcfService/Service.svc 
+0x01bd68dc    11647 Sec        no        29 Sec      24        200   POST /MySleepingWcfService/Service.svc 
+0x01bdb404    11647 Sec        no        29 Sec      31        200   POST /MySleepingWcfService/Service.svc 
+0x01be3404    11647 Sec        no        28 Sec      33        200   POST /MySleepingWcfService/Service.svc 
+0x01bfd404    11647 Sec        no        28 Sec      35        200   POST /MySleepingWcfService/Service.svc 
+0x01c0f41c    11647 Sec        no        27 Sec      37        200   POST /MySleepingWcfService/Service.svc 
+0x01c1541c    11647 Sec        no        27 Sec      39        200   POST /MySleepingWcfService/Service.svc 
+0x01c3c634    11647 Sec       yes                   XXX        200   POST /MySleepingWcfService/Service.svc 
+0x01c404c8    11647 Sec        no        25 Sec      41        200   POST /MySleepingWcfService/Service.svc 
+0x01c6264c    11647 Sec        no        25 Sec      44        200   POST /MySleepingWcfService/Service.svc 
+Total 29 HttpContext objects
+    
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">Using this information you can find out the thread which is handling your request and if the request is taking a longer time to execute, you can check the callstack of the thread to see what it is doing and why it is taking a longer time to execute and this is pretty helpful. If you are hosting WCF services inside IIS, the same command will show you the information about the HttpContexts associated with the WCF requests and the thread handing the request <b>but</b> because of the way the WCF requests work inside IIS, the thread reported by the !aspxpages command will always show you the call-stack like below. </span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">0:027&gt; !clrstack
+OS Thread Id: 0x2740 (27)
+ESP       EIP     
+0f4af060 775564f4 [HelperMethodFrame_1OBJ: 0f4af060] System.Threading.WaitHandle.WaitOneNative(Microsoft.Win32.SafeHandles.SafeWaitHandle, UInt32, Boolean, Boolean) 
+0f4af10c 6f6e685f System.Threading.WaitHandle.WaitOne(Int64, Boolean) 
+0f4af128 6f6e6815 System.Threading.WaitHandle.WaitOne(Int32, Boolean) 
+0f4af13c 6f6e67dd System.Threading.WaitHandle.WaitOne() 
+0f4af144 79962000 System.ServiceModel.Activation.HostedHttpRequestAsyncResult.ExecuteSynchronous(System.Web.HttpApplication, Boolean)
+0f4af174 799618f4 System.ServiceModel.Activation.HttpModule.ProcessRequest(System.Object, System.EventArgs)
+0f4af19c 6574ec35 System.Web.HttpApplication+SyncEventExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute() 
+0f4af1b4 65742a5c System.Web.HttpApplication.ExecuteStep(IExecutionStep, Boolean ByRef) 
+0f4af1f4 6574e1f3 System.Web.HttpApplication+ApplicationStepManager.ResumeSteps(System.Exception) 
+0f4af244 65741fdc System.Web.HttpApplication.System.Web.IHttpAsyncHandler.BeginProcessRequest(System.Web.HttpContext, System.AsyncCallback, System.Object) 
+0f4af260 6574554c System.Web.HttpRuntime.ProcessRequestInternal(System.Web.HttpWorkerRequest) 
+0f4af294 657451f3 System.Web.HttpRuntime.ProcessRequestNoDemand(System.Web.HttpWorkerRequest) 
+0f4af2a4 6574438c System.Web.Hosting.ISAPIRuntime.ProcessRequest(IntPtr, Int32) 
+0f4af4b8 70290256 [ContextTransitionFrame: 0f4af4b8]  
+0f4af4ec 70290256 [GCFrame: 0f4af4ec]  
+0f4af648 70290256 [ComMethodFrame: 0f4af648] 
+
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">The reason for this is the way WCF runtime handles the request. You will always see two threads to process the WCF request. One thread is the CLR ThreadPool thread (which will look something like the above thread) which is the worker thread that comes from ASP.NET and the other thread is an I/O thread that is managed by the WCF IOThreadScheduler (actually created by ThreadPool.UnsafeQueueNativeOverlapped). More details on this behavior are mentioned in <a href="http://blogs.msdn.com/b/wenlong/archive/2008/04/21/wcf-request-throttling-and-server-scalability.aspx">this</a> blog. </span></p>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">Most of the times you are interested in finding out the actual WCF thread which is servicing this request because that would be the thread which is actually executing the method code inside your WCF service and if your service it service method is taking a long time to execute, that would be thread that would be the thread that requires attention. At this point, there is no direct command to show you the WCF I/O thread. To find that out, you have to look at the managed call-stack of <b>all the threads in a dump file</b> and find out the threads which have a call to </span><span lang="EN" style="font-family: 'Courier New';background: yellow;font-size: 10pt">System.ServiceModel.Dispatcher.SyncMethodInvoker.Invoke</span><span lang="EN" style="font-family: 'Calibri','sans-serif'"> function and track that back to the ASP.NET Worker thread to assosiate it with the actual ASP.NET worker thread shown in !aspxpages output. </span></p>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">So from this dump file, I just picked one such thread which had a call to </span><span lang="EN" style="font-family: 'Courier New';background: yellow;font-size: 10pt">System.ServiceModel.Dispatcher.SyncMethodInvoker.Invoke</span><span lang="EN" style="font-family: 'Calibri','sans-serif'"> function (Thread 45). </span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">OS Thread Id: 0x23b4 (45)
+ESP       EIP     
+0fc8e428 775564f4 [HelperMethodFrame: 0fc8e428] System.Threading.Thread.SleepInternal(Int32) 
+0fc8e47c 0f3c00a2 Service.SleepyMethod(Int32)
+0fc8e48c 0e6301cd DynamicClass.SyncInvokeSleepyMethod(System.Object, System.Object[], System.Object[])
+0fc8e4a0 79957338 <span style="background-color: #ffff00">System.ServiceModel.Dispatcher.SyncMethodInvoker.Invoke</span>(System.Object, System.Object[], System.Object[] ByRef)
+0fc8e558 79955572 System.ServiceModel.Dispatcher.DispatchOperationRuntime.InvokeBegin(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e5ac 799550e3 System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage5(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e5e4 79955000 System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage4(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e610 79954f66 System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage3(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e624 79954d43 System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage2(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e638 799544c7 System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.ProcessMessage1(System.ServiceModel.Dispatcher.MessageRpc ByRef)
+0fc8e658 7995420b System.ServiceModel.Dispatcher.MessageRpc.Process(Boolean)
+0fc8e69c 7995415d System.ServiceModel.Dispatcher.ImmutableDispatchRuntime.Dispatch(System.ServiceModel.Dispatcher.MessageRpc ByRef, Boolean)
+0fc8e6ac 79953b3e System.ServiceModel.Dispatcher.ChannelHandler.DispatchAndReleasePump(System.ServiceModel.Channels.RequestContext, Boolean, System.ServiceModel.OperationContext)
+0fc8e854 79952b4f System.ServiceModel.Dispatcher.ChannelHandler.HandleRequest(System.ServiceModel.Channels.RequestContext, System.ServiceModel.OperationContext)
+0fc8e888 79952893 System.ServiceModel.Dispatcher.ChannelHandler.AsyncMessagePump(System.IAsyncResult)
+0fc8e8a0 7991cf05 System.ServiceModel.Dispatcher.ChannelHandler.OnContinueAsyncReceive(System.Object)
+0fc8e8b0 79959f86 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem.Invoke2()
+0fc8e8f0 79959f28 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem.OnSecurityContextCallback(System.Object)
+0fc8e8f8 6f6bfe35 System.Security.SecurityContext.Run(System.Security.SecurityContext, System.Threading.ContextCallback, System.Object) 
+0fc8e910 79959eed System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem.Invoke()
+0fc8e924 79959e70 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper.ProcessCallbacks()
+0fc8e958 79959cca System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper.CompletionCallback(System.Object)
+0fc8e984 79959c3f System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+ScheduledOverlapped.IOCallback(UInt32, UInt32, System.Threading.NativeOverlapped*)
+0fc8e990 6193e6dd System.ServiceModel.Diagnostics.Utility+IOCompletionThunk.UnhandledExceptionFrame(UInt32, UInt32, System.Threading.NativeOverlapped*)
+0fc8e9c4 6f6bcda4 <span style="background-color: #ffff00">System.Threading._IOCompletionCallback.PerformIOCompletionCallback</span>(UInt32, UInt32, System.Threading.NativeOverlapped*) 
+0fc8eb64 70171b6c [GCFrame: 0fc8eb64]  
+0fc8ecb8 70171b6c [ContextTransitionFrame: 0fc8ecb8]  
+
+
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">The rest of the post will walk you through the steps on finding out the HttpContext associated with the above thread. We start by running the command <b>!dso</b> (!dumpstackobjects) on this thread and picking up the object of type </span><b><span style="font-family: 'Calibri','sans-serif'">System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem</span></b><span lang="EN" style="font-family: 'Calibri','sans-serif'">. </span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">0:045&gt; !dso
+OS Thread Id: 0x23b4 (45)
+ESP/REG  Object   Name
+0fc8e480 05f24538 Service
+0fc8e48c 05ae2eb8 System.ServiceModel.Dispatcher.SyncMethodInvoker
+<b>&lt;stripping for clarity&gt;</b>
+0fc8e8f0 05f241d8 System.Security.SecurityContext
+0fc8e8fc 05f241c4 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem
+0fc8e900 05f241d8 System.Security.SecurityContext
+0fc8e90c 05f241c4 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem
+0fc8e924 01b3a5fc System.Object
+<span style="background-color: #ffff00">0fc8e928 05f241c4 System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem</span>
+0fc8e958 01b3a5fc System.Object
+0fc8e974 01b3a728 System.ServiceModel.Diagnostics.Utility+IOCompletionThunk
+0fc8e990 01b3a728 System.ServiceModel.Diagnostics.Utility+IOCompletionThunk
+0fc8e9ac 01b3a688 System.Threading.Overlapped
+0fc8eb98 01c1ab84 System.Threading.OverlappedData
+
+
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">Once you find this object, you can dump this out using !do </span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">0:045&gt; !do 05f241c4 
+Name: System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem
+MethodTable: 79a781a8
+EEClass: 796d6aa8
+Size: 20(0x14) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_MSIL\System.ServiceModel\3.0.0.0__b77a5c561934e089\System.ServiceModel.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6f73ef38  40019b2        4 ...ding.WaitCallback  0 instance 05af63f0 callback
+<span style="background-color: #ffff00">6f7584dc  40019b3        8        System.Object  0 instance 05f15538 state</span>
+6f735cf8  40019b4        c ...y.SecurityContext  0 instance 05f241d8 context
+6f735204  40019b1      374 ...g.ContextCallback  0   shared   static securityContextCallback
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:05aa2278 &lt;&lt;
+
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">From here onwards you have a do a series of !do commands till you reach the HttpContext object. This is how the object hierarchy looks like </span></p>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif';color: #c00000">System.ServiceModel.Channels.IOThreadScheduler+CriticalHelper+WorkItem (state) -&gt; SecuritySessionServerSettings+ServerSecuritySessionChannel+ReceiveRequestAsyncResult (innerRequestContext)-&gt; System.ServiceModel.Activation.HostedHttpContext(result) -&gt; System.ServiceModel.Activation.HostedHttpRequestAsyncResult (context) -&gt; System.Web.HttpApplication (_context) -&gt; System.Web.HttpContext </span></p>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">So picking up the state field from </span><span lang="EN" style="font-family: 'Courier New';font-size: 10pt">IOThreadScheduler+CriticalHelper+WorkItem </span><span lang="EN" style="font-family: 'Calibri','sans-serif'">we get <span style="color: #c00000">SecuritySessionServerSettings+ServerSecuritySessionChannel+ReceiveRequestAsyncResult</span></span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<pre id="codeSnippet" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 0em;width: 100%;font-family: 'Courier New', courier, monospace;direction: ltr;color: black;font-size: 8pt;overflow: visible;border-style: none;padding: 0px">0:045&gt; !do 05f15538 
+Name: System.ServiceModel.Security.SecuritySessionServerSettings+ServerSecuritySessionChannel+ReceiveRequestAsyncResult
+MethodTable: 79a2c2d0
+EEClass: 7973d4d8
+Size: 72(0x48) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_MSIL\System.ServiceModel\3.0.0.0__b77a5c561934e089\System.ServiceModel.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6f73fd5c  40009ae        4 System.AsyncCallback  0 instance 05af63d0 callback
+6f7584dc  40009af        8        System.Object  0 instance 05f15428 state
+6f75eadc  40009b0       1c       System.Boolean  1 instance        1 completedSynchronously
+6f75eadc  40009b1       1d       System.Boolean  1 instance        1 endCalled
+6f758a54  40009b2        c     System.Exception  0 instance 00000000 exception
+6f75eadc  40009b3       1e       System.Boolean  1 instance        1 isCompleted
+6f7424a4  40009b4       10 ....ManualResetEvent  0 instance 00000000 manualResetEvent
+6f7584dc  40009b5       14        System.Object  0 instance 05f15580 thisLock
+79a77030  40009b6       18 ...viceModelActivity  0 instance 00000000 callbackActivity
+79a43d6c  4002dd7       20 ...itySessionChannel  0 instance 05f0e620 channel
+<span style="background-color: #ffff00">79a04894  4002dd8       24 ...ls.RequestContext  0 instance 05f08504 innerRequestContext</span>
+79a7b610  4002dd9       28 ....Channels.Message  0 instance 05f15868 requestMessage
+79a3c6b0  4002dda       2c ...lCorrelationState  0 instance 05f241b0 correlationState
+6f75eadc  4002ddb       1f       System.Boolean  1 instance        0 expired
+79a7bbcc  4002ddc       30 ...del.TimeoutHelper  1 instance 05f15568 timeoutHelper
+6f73ef38  4002dd5      780 ...ding.WaitCallback  0   shared   static onWait
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:05e3066c &lt;&lt;
+6f73fd5c  4002dd6      784 System.AsyncCallback  0   shared   static onReceive
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:05e306bc &lt;&lt;
+
+0:045&gt; !do 05f08504 
+Name: System.ServiceModel.Activation.HostedHttpContext
+MethodTable: 79a09b98
+EEClass: 79696fcc
+Size: 68(0x44) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_MSIL\System.ServiceModel\3.0.0.0__b77a5c561934e089\System.ServiceModel.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6f739e70  4000ab9       18      System.TimeSpan  1 instance 05f0851c defaultSendTimeout
+6f739e70  4000aba       20      System.TimeSpan  1 instance 05f08524 defaultCloseTimeout
+79a432d4  4000abb       10         System.Int32  1 instance        2 state
+79a7b610  4000abc        4 ....Channels.Message  0 instance 05f0bbbc requestMessage
+6f758a54  4000abd        8     System.Exception  0 instance 00000000 requestMessageException
+6f75eadc  4000abe       14       System.Boolean  1 instance        0 replySent
+6f75eadc  4000abf       15       System.Boolean  1 instance        0 replyInitiated
+6f75eadc  4000ac0       16       System.Boolean  1 instance        0 aborted
+6f7584dc  4000ac1        c        System.Object  0 instance 05f08548 thisLock
+79a02b04  4000e15       28 ...annels.HttpOutput  0 instance 00000000 httpOutput
+79a029ac  4000e16       2c ...hannels.HttpInput  0 instance 05f08554 httpInput
+79a03eb0  4000e17       30 ...tpChannelListener  0 instance 05adeaf4 listener
+79a8a134  4000e18       34 ...tyMessageProperty  0 instance 00000000 securityProperty
+79a09d4c  4000e3a       38 ...dRequestContainer  0 instance 05f0d630 requestContainer
+<span style="background-color: #ffff00">79a095b0  4000e3b       3c ...equestAsyncResult  0 instance 01c40c5c result</span>
+
+0:045&gt; !do 01c40c5c 
+Name: System.ServiceModel.Activation.HostedHttpRequestAsyncResult
+MethodTable: 79a095b0
+EEClass: 79696ae8
+Size: 60(0x3c) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_MSIL\System.ServiceModel\3.0.0.0__b77a5c561934e089\System.ServiceModel.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6f73fd5c  40009ae        4 System.AsyncCallback  0 instance 01b3a534 callback
+6f7584dc  40009af        8        System.Object  0 instance 01c3fba4 state
+6f75eadc  40009b0       1c       System.Boolean  1 instance        0 completedSynchronously
+6f75eadc  40009b1       1d       System.Boolean  1 instance        0 endCalled
+6f758a54  40009b2        c     System.Exception  0 instance 00000000 exception
+6f75eadc  40009b3       1e       System.Boolean  1 instance        0 isCompleted
+6f7424a4  40009b4       10 ....ManualResetEvent  0 instance 00000000 manualResetEvent
+6f7584dc  40009b5       14        System.Object  0 instance 01c40c98 thisLock
+79a77030  40009b6       18 ...viceModelActivity  0 instance 00000000 callbackActivity
+79a096b0  4000e49       20 ...ersonationContext  0 instance 01c40ca4 impersonationContext
+79a300b4  4000e4a       24 ....HostedThreadData  0 instance 00000000 hostedThreadData
+<span style="background-color: #ffff00">6580e674  4000e4b       28 ...b.HttpApplication  0 instance 01c3d1f4 context</span>
+6ee9fb70  4000e4c       2c           System.Uri  0 instance 05f08034 originalRequestUri
+6ee9fb70  4000e4d       30           System.Uri  0 instance 05f081f0 requestUri
+6f75ab0c  4000e4e       34         System.Int32  1 instance        0 state
+6f75eadc  4000e4f       1f       System.Boolean  1 instance        0 flowContext
+6f765e44  4000e43      178 ...l.WindowsIdentity  0   shared   static anonymousIdentity
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:NotInit  &lt;&lt;
+6f73ef38  4000e44      17c ...ding.WaitCallback  0   shared   static waitOnBeginRequest
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:NotInit  &lt;&lt;
+6f73ef38  4000e45      180 ...ding.WaitCallback  0   shared   static waitOnBeginRequestWithFlow
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:NotInit  &lt;&lt;
+6f735204  4000e46      184 ...g.ContextCallback  0   shared   static contextOnBeginRequest
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:NotInit  &lt;&lt;
+6f73fd5c  4000e47      188 System.AsyncCallback  0   shared   static processRequestCompleteCallback
+    &gt;&gt; Domain:Value  01235fc0:NotInit  01292638:NotInit  &lt;&lt;
+6f73c368  4000e48        0 ...ng.AutoResetEvent  0   shared TLstatic waitObject
+    &gt;&gt; Thread:Value 26b8:01b3a4b8 2740:01b5e4fc 1e10:01b6dca4 6c8:01bdffe0 724:01be7948 188c:01c00938 240c:01c1298c 13d0:01c18964 2260:01c3fba4 20fc:01c65bd0 &lt;&lt;
+
+0:045&gt; !do 01c3d1f4 
+Name: System.Web.HttpApplication
+MethodTable: 6580e674
+EEClass: 65610c98
+Size: 116(0x74) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_32\System.Web\2.0.0.0__b03f5f7f11d50a3a\System.Web.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6580e85c  4000dde        4 ...pApplicationState  0 instance 01afaac4 _state
+6580cf64  4000ddf        8 ...m.Web.HttpContext  0 instance 00000000 _initContext
+6580eba0  4000de0        c ...b.HttpAsyncResult  0 instance 01c407d0 _ar
+6580eb14  4000de1       10 ...pModuleCollection  0 instance 01c3d494 _moduleCollection
+6eea00a0  4000dfc       14 ....EventHandlerList  0 instance 01c3e300 _events
+658142c4  4000dfd       18 ...ventHandlersTable  0 instance 01c3e40c _asyncEvents
+65815b14  4000dfe       1c ...ation+StepManager  0 instance 01c3f1e4 _stepManager
+6f73ef38  4000dff       20 ...ding.WaitCallback  0 instance 01c3f1c4 _resumeStepsWaitCallback
+6f735504  4000e00       24     System.EventArgs  0 instance 01b34924 _appEvent
+6f75af14  4000e01       28 ...ections.Hashtable  0 instance 01c3d268 _handlerFactories
+6f75a8f0  4000e02       2c ...ections.ArrayList  0 instance 00000000 _handlerRecycleList
+6f75eadc  4000e03       68       System.Boolean  1 instance        0 _hideRequestResponse
+<span style="background-color: #ffff00">6580cf64  4000e04       30 ...m.Web.HttpContext  0 instance 01c404c8 _context</span>
+6f758a54  4000e05       34     System.Exception  0 instance 00000000 _lastError
+6f75eadc  4000e06       69       System.Boolean  1 instance        1 _timeoutManagerInitialized
+
+
+
+<span style="background-color: #ffff00">0:045&gt; !do 01c404c8 </span>
+<span style="background-color: #ffff00">Name: System.Web.HttpContext</span>
+MethodTable: 6580cf64
+EEClass: 6560fff8
+Size: 192(0xc0) bytes
+GC Generation: 0
+(C:\Windows\assembly\GAC_32\System.Web\2.0.0.0__b03f5f7f11d50a3a\System.Web.dll)
+Fields:
+      MT    Field   Offset                 Type VT     Attr    Value Name
+6580e714  4000fe6        4 ...IHttpAsyncHandler  0 instance 01c3d1f4 _asyncAppHandler
+6580e674  4000fe7        8 ...b.HttpApplication  0 instance 01c3d1f4 _appInstance
+6580e754  4000fe8        c ....Web.IHttpHandler  0 instance 00000000 _handler
+6580e9a4  4000fe9       10 ...m.Web.HttpRequest  0 instance 01c40588 _request
+6580ea04  4000fea       14 ....Web.HttpResponse  0 instance 01c40634 _response
+6580eac4  4000feb       18 ...HttpServerUtility  0 instance 01c40cb8 _server
+6f737c24  4000fec       1c ...Collections.Stack  0 instance 00000000 _traceContextStack
+658115e0  4000fed       20 ....Web.TraceContext  0 instance 00000000 _topTraceContext
+6f75af14  4000fee       24 ...ections.Hashtable  0 instance 00000000 _items
+6f75a8f0  4000fef       28 ...ections.ArrayList  0 instance 00000000 _errors
+6f758a54  4000ff0       2c     System.Exception  0 instance 00000000 _tempError
+6f75eadc  4000ff1       90       System.Boolean  1 instance        0 _errorCleared
+6f740378  4000ff2       30 ...ncipal.IPrincipal  0 instance 01b34984 _user
+6f75b188  4000ff3       80        System.IntPtr  1 instance        0 _pManagedPrincipal
+6580e3dc  4000ff4       34 ...ofile.ProfileBase  0 instance 00000000 _Profile
+6f739f0c  4000ff5       a0      System.DateTime  1 instance 01c40568 _utcTimestamp
+65810df4  4000ff6       38 ...HttpWorkerRequest  0 instance 01c3fea0 _wr
+6f75bd2c  4000ff7       a8 ...Services.GCHandle  1 instance 01c40570 _root
+6f75b188  4000ff8       84        System.IntPtr  1 instance 10490900 _ctxPtr
+65809b78  4000ff9       3c ...m.Web.VirtualPath  0 instance 00000000 _configurationPath
+6f75eadc  4000ffa       91       System.Boolean  1 instance        0 _skipAuthorization
+6f75b4bc  4000ffb       40 ...ation.CultureInfo  0 instance 00000000 _dynamicCulture
+6f75b4bc  4000ffc       44 ...ation.CultureInfo  0 instance 00000000 _dynamicUICulture
+6f75ab0c  4000ffd       88         System.Int32  1 instance        0 _serverExecuteDepth
+6f737c24  4000ffe       48 ...Collections.Stack  0 instance 00000000 _handlerStack
+<b>&lt;striping the rest of the output&gt;</b>
+
+
+</pre>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">This context is the actual HttpContext reported inside the !aspxpages pages and using this technique you can associate the WCF request processing threads with the ASP.NET worker thread that handled the request in the first place, so going back to the output given by !aspxpages pages, we can see that the HttpContext (</span><span lang="EN" style="font-family: 'Courier New';font-size: 10pt">01c404c)</span><span lang="EN" style="font-family: 'Calibri','sans-serif'"> to the below entry </span></p>
+<div id="codeSnippetWrapper" style="text-align: left;line-height: 12pt;background-color: #f4f4f4;margin: 20px 0px 10px;width: 97.5%;font-family: 'Courier New', courier, monospace;direction: ltr;font-size: 8pt;overflow: auto;cursor: text;border: silver 1px solid;padding: 4px">
+<p><span style="color: #ff0000">0x01c404c8</span> 11647 Sec no 25 Sec 41 200 POST /MySleepingWcfService/Service.svc</p>
+<p>&nbsp;</p>
+</div>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">So this concludes that the HttpContext </span><span lang="EN" style="font-family: 'Courier New';font-size: 10pt">01c404c8 </span><span lang="EN" style="font-family: 'Calibri','sans-serif'">for which the ASP.NET worker thread is 41 is actually getting processed on thread 45. </span></p>
+<p><span lang="EN" style="font-family: 'Calibri','sans-serif'">The steps are a little lengthy but at times you really need to find this information. You can even write a debugger script to automate this whole process. </span></p>
+<p><b><span lang="EN" style="font-family: 'Calibri','sans-serif'">HAPPY DEBUGGING !!!</span></b><b> </b></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>

@@ -1,0 +1,95 @@
+---
+layout: post
+title: Azure App Service - What is taking my disk space for my Azure Web App ?
+date: 2017-06-06 08:58:23.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags:
+- Azure WebApp
+- disk full
+- ERROR_NOT_ENOUGH_DISK_SPACE
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Azure App Service &#8211; What is taking my disk space for my Azure Web App ?" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2017/06/06/azure-app-service-what-is-taking-my-disk-space-for-my-azure-web-app/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="While working on Azure App service, you may notice disk full errors. These may surface in different ways for e.g. The application may get the error &#8220;System.IO.IOException: There is not enough space on the disk&#8221;. You may see disk errors while browsing to the KUDU Console. You try to publish using VSTS or Visual Studio..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/2017/06/QuotasApp1.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Azure App Service &#8211; What is taking my disk space for my Azure Web App ?" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2017/06/06/azure-app-service-what-is-taking-my-disk-space-for-my-azure-web-app/" />
+    <meta name="twitter:description" content="While working on Azure App service, you may notice disk full errors. These may surface in different ways for e.g. The application may get the error &#8220;System.IO.IOException: There is not enough space on the disk&#8221;. You may see disk errors while browsing to the KUDU Console. You try to publish using VSTS or Visual Studio..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/2017/06/QuotasApp1.png" />
+  _gtm_vars: a:0:{}
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2017/06/06/azure-app-service-what-is-taking-my-disk-space-for-my-azure-web-app/"
+---
+<p>While working on Azure App service, you may notice disk full errors. These may surface in different ways for e.g.</p>
+<ol>
+<li>The application may get the error "System.IO.IOException: There is not enough space on the disk".</li>
+<li>You may see disk errors while browsing to the KUDU Console.</li>
+<li>You try to publish using VSTS or Visual Studio and you get an error like "ERROR_NOT_ENOUGH_DISK_SPACE: Web deployment task failed. (Web Deploy detected insufficient space on disk)".</li>
+</ol>
+<p>In this post, I will cover how you can identify why you are getting these errors, and identify what inside your Web App might be consuming disk space.</p>
+<p>First and foremost, it is important to understand that each App Service Plan gets an allocation of disk space corresponding to the pricing tier.</p>
+<p>At the time of writing of this blog, this is the amount of disk space that is available per pricing tier ( This might change in future so you should check out <a href="https://azure.microsoft.com/en-in/pricing/details/app-service/plans/">https://azure.microsoft.com/en-in/pricing/details/app-service/plans/</a> which should have the updated information.)</p>
+<p>&nbsp;</p>
+<table width="890" border="1" cellspacing="0" cellpadding="0">
+<thead>
+<tr>
+<td width="248"></td>
+<td width="184"><strong>FREE</strong></td>
+<td width="184"><strong>SHARED</strong></td>
+<td width="184"><strong>BASIC</strong></td>
+<td width="184"><strong>STANDARD</strong></td>
+<td width="184"><strong>PREMIUM</strong></td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td width="248">Disk space</td>
+<td width="184">1 GB</td>
+<td width="184">1 GB</td>
+<td width="184">10 GB</td>
+<td width="184">50 GB</td>
+<td width="184">250 GB</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p>All of your Web Apps in the same App Service Plan will share the disk space. If your files on the disk exceed this limit, you will start getting disk full kind of errors.</p>
+<p>Your files will include one or more of the items in the following list.</p>
+<ul>
+<li>The Web Site Content</li>
+<li>The App_Data for an Asp.Net Application</li>
+<li>The Logfiles folder.</li>
+</ul>
+<p>The reason why it becomes a little tricky to figure out this issue is because you have may have multiple Web Apps in an App Service Plan. If one of the Web Apps is taking more disk space than the others, you may not be able to easily identify which Web App to investigate.</p>
+<p>However, to help you, the <strong>Quotas</strong> blade at the Web App level in Azure portal (<a href="https://portal.azure.com/">https://portal.azure.com/</a>) allows you identify this issue easily. Here is a screenshot of what I see when search for Quotas in the settings for my Web App.</p>
+<p>&nbsp;</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/2017/06/QuotasApp1.png"><img width="1238" height="594" class="alignnone size-full wp-image-215" alt="" src="{{ site.baseurl }}/assets/QuotasApp1.png" /></a></p>
+<p>&nbsp;</p>
+<p>In the above screenshot, you can see two quotas.</p>
+<ol>
+<li>The<span> </span><strong>File System Usage (App)</strong><span> </span>which is the disk space consumed by my Web App.</li>
+<li><span> The </span><strong>File System Usage (App Service Plan)</strong><span> </span>which is the disk space consumed by the<span> </span><strong>App Service plan.</strong><span> </span></li>
+</ol>
+<p><span> </span>The above image illustrates that the App Service plan is consuming<span> </span><strong>6.13GB</strong><span> </span>of disk space (out of<span> </span><strong>50 GB</strong><span> </span>total as my Web App is on a Standard Plan which gives me 50 GB) and my Web App is consuming<span> </span><strong>4.68 GB</strong><span> </span>out of this<span> </span><strong>6.13 GB</strong><span>.</span></p>
+<p>The remaining disk space is consumed by the other Web Apps in the App Service Plan.</p>
+<p>So from here, I can quickly identify whether my current Web App (i.e. the Web App currently selected in the portal) ,is consuming high disk space or if the disk space is consumed by another Web App in the same App Service Plan. If the current Web App is consuming the disk space then I have already identified the culprit, otherwise I will look at the other Web Apps in my App Service Plan and check the Quotas blade for those Web Apps individually.</p>
+<p>To list all of  the Web Apps in the App Service plan , I can click on<span> </span><strong>App Service Plan</strong><span> </span>for my Web App and click on the <span> </span><strong>Apps</strong><span> </span>setting.  This will show me all the sites under my App Service Plan and from there on , I can click on each Web App and look at the Quotas blade for that Web App to see how much disk space that Web App is consuming.</p>
+<p>This maybe complex if there are many Web Apps under the same App Service Plan. Please note that this part of the portal is subject to change and please feedback on <a href="http://feedback.azure.com">http://feedback.azure.com</a> if you have any input.</p>
+<p>In the meantime, I wrote a small <strong><a href="https://blogs.msdn.microsoft.com/puneetgupta/2016/03/21/automating-webapps-hosted-in-azure-app-service-through-powershell-arm-way/#FindDiskUsageAppServicePlan">PowerShell script</a> that can help you find this information</strong>. Just pass the Web App name and the subscription ID and the script will identify the App Service Plan for the Web App and show App Service Plan disk usage and a breakup of disk space consumed by all Web App and slots in your App Service Plan.</p>
+<p><strong>Once you identify the right Web App,</strong><span> </span>you may want to understand<span> </span><strong>what content inside that Web App</strong><span> </span>is consuming high disk space. For that, you can install the Disk Usage Site extension on that Web App to identify what exactly within that Web App is consuming the maximum space. There is a good external blog that talks about how to use this extension<span> </span><a href="http://fenglu.me/2017/02/18/Review-and-manage-your-web-site-space-in-Azure/">http://fenglu.me/2017/02/18/Review-and-manage-your-web-site-space-in-Azure/</a> so I am not going to repeat the steps but using this extension you can exactly identify which sites or folders within your WebApp content are consuming high disk space.</p>
+<p>Hope this information helps !!!</p>

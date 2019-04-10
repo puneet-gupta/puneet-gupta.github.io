@@ -1,0 +1,813 @@
+---
+layout: post
+title: EventId 4196 - Troubleshooting Crashes in COM+ Applications
+date: 2010-07-03 09:11:22.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Auto Draft" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=163" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/0272.image_thumb.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Auto Draft" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=163" />
+    <meta name="twitter:description" content="Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/0272.image_thumb.png" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2010/07/03/eventid-4196-troubleshooting-crashes-in-com-applications/"
+---
+<p>Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As a result of this you may end up seeing intermittent or unexpected crashes in your application. Today we will learn about collecting some valuable information for unexpected crashes that can happen in COM+ components and how to deal with them.</p>
+<p><strong><span style="text-decoration: underline">What is a Crash?</span></strong> – The term <em>CRASH </em>is used by different people in various different ways. In our(or my) definition a crash is an unexpected termination of a process as result of an unhandled exception in the code. If COM+ encounters an unhandled exception in the component code the COM+ Runtime terminates the process immediately and logs the following event in the event viewer letting the user know that a crash has happened. This is called COM+ Failfast</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
+<p><strong>This particular behavior of COM+ terminating the process on an unexpected error condition is termed as COM+ Failfast</strong>.</p>
+<p>This blog will list out the steps required to troubleshoot a COM+ Failfast and it can be summarized as:-</p>
+<ol>
+<li><a href="#A_WORD_ABOUT_SYMBOLS">Generating the Symbols for the application</a></li>
+<li><a href="#CONFIGURING_DEBUGGER">Configuring the debugger to collect dumps on the right exception</a></li>
+<li><a href="#COLLECTING_DUMPS">Collecting the dump file</a></li>
+<li><a href="#ANALYZING_DUMPS">Analyzing the dump using a windows debugger</a>.</li>
+<li>Making relevant code changes to correct the problem.</li>
+</ol>
+<p>Now we will look at each of the above steps in detail</p>
+<p>To walk you through the process, I wrote a COM component in VB 6.0 and configured it in COM+.  I intentionally have some <span style="text-decoration: underline">bad code </span>in my component which is causing the component to Crash. I am calling the component from a very simple VBSCRIPT file like this.</p>
+<div style="background: white;color: black;font-family: consolas;font-size: 10pt">
+<blockquote>
+<pre style="margin: 0px"><span style="color: blue">Dim</span> MathComponent</pre>
+<pre style="margin: 0px"><span style="color: blue">Set</span> MathComponent = Createobject(<span style="color: maroon">"Arithmetic.Maths"</span>)</pre>
+<pre style="margin: 0px">wscript.echo = MathComponent.DoSomeCalculation(1,2,3)</pre>
+</blockquote>
+</div>
+<p>On running the above script file, I can see a crash in the DLLHOST process and the following event is logged in the event viewer.</p>
+<blockquote><p>Event Type:    Error<br />
+Event Source:    COM+<br />
+Event Category:    Unknown<br />
+Event ID:    4786<br />
+Date:        7/3/2010<br />
+Time:        10:56:45 AM<br />
+User:        N/A<br />
+Computer:    TURTLE86<br />
+Description:<br />
+The system has called a custom component and that component has failed and generated an exception. This indicates a problem with the custom component. Notify the developer of this component that a failure has occurred and provide them with the information below.<br />
+Component Prog ID:<br />
+Server Application ID: {9E761F3D-4C33-4158-9EC4-B3C5831D346F}<br />
+Server Application Instance ID:<br />
+{002B45BE-CAC5-4E9B-8811-B21EDD73B278}<br />
+Server Application Name: MathsApplication<br />
+The serious nature of this error has caused the process to terminate.<br />
+Exception: C0000008<br />
+Address: 0x7C8285F3<br />
+Call Stack:<br />
+ntdll!KiRaiseUserExceptionDispatcher + 0x37<br />
+ntdll!KiFastSystemCallRet + 0x0<br />
+<span style="color: #0080ff">Arithmetic!DllCanUnloadNow + 0x272<br />
+Arithmetic!DllCanUnloadNow + 0x1c4<br />
+Arithmetic!DllCanUnloadNow + 0x117<br />
+Arithmetic!DllCanUnloadNow + 0x6a<br />
+</span>OLEAUT32!DispCallFunc + 0xab<br />
+MSVBVM60!__vbaAptOffset + 0x68b<br />
+MSVBVM60!BASIC_CLASS_Invoke + 0x65<br />
+OLEAUT32!DispGetParam + 0x718<br />
+OLEAUT32!DllRegisterServer + 0x5bf<br />
+RPCRT4!NdrAsyncServerCall + 0x1e7<br />
+RPCRT4!CStdStubBuffer_Invoke + 0x82<br />
+OLEAUT32!DispGetParam + 0x5b6<br />
+ole32!StgGetIFillLockBytesOnFile + 0x13d32<br />
+ole32!StgGetIFillLockBytesOnFile + 0x13cdf<br />
+ole32!DcomChannelSetHResult + 0xaab<br />
+ole32!DcomChannelSetHResult + 0x495<br />
+ole32!CoFreeUnusedLibrariesEx + 0xb06<br />
+ole32!StgGetIFillLockBytesOnFile + 0x13bec<br />
+ole32!StgGetIFillLockBytesOnFile + 0x13a7d<br />
+ole32!StgGetIFillLockBytesOnFile + 0x12f64<br />
+ole32!CoFreeUnusedLibrariesEx + 0x9f5<br />
+ole32!CoFreeUnusedLibrariesEx + 0x9c0<br />
+USER32!LoadCursorW + 0x4cf5<br />
+USER32!LoadCursorW + 0x4e86<br />
+USER32!TranslateMessageEx + 0x10d<br />
+USER32!DispatchMessageW + 0xf<br />
+COMSVCS!DllUnregisterServer + 0x270<br />
+COMSVCS!DllUnregisterServer + 0x180<br />
+COMSVCS!DllUnregisterServer + 0xc6c<br />
+COMSVCS!DllUnregisterServer + 0xf4d<br />
+msvcrt!_endthreadex + 0xa3<br />
+kernel32!GetModuleHandleA + 0xdf</p></blockquote>
+<p>The above event entry also contains the callstack information for the thread on which the unhandled exception is thrown but there is just a <strong>small problem </strong>with the callstack that is shown in the Event. The callstack may or may not show you the right function names because of missing symbols. For e.g. the stack is showing me that functions from my DLL Arithmetic.dll (highlighted in blue) were called but it just showing one function name DllCanUnloadNow where as in my VB code I never wrote a function called DllCanUnloadNow(). So what is the DllCanUnloadNow function. Well that is what the debugger is able to match the closest based on the default export function table of a DLL and it needs symbols to translate the memory offsets to function names. <strong><em>Now what exactly is a symbol ???</em></strong></p>
+<p><strong><span style="font-size: medium"><a name="A_WORD_ABOUT_SYMBOLS"></a>A word about symbols !!!</span></strong></p>
+<p>It is very critical for us to know the exact function where the problem happened (and if possible the exact line of code) and we can find that information only if we have the right symbols for our DLLs. Symbols (or pdb files) are binary files that are generated by compilers during code generation which help you translate the function offsets in a module to the RIGHT function names. More information on symbols and their importance can be found on</p>
+<p><a href="http://www.microsoft.com/whdc/devtools/debugging/debugstart.mspx" target="_blank">this</a> link and thousands of other articles and blogs available on the internet.</p>
+<p>&nbsp;</p>
+<p>In older versions of Visual Studio (as old as Visual Studio 6.0), symbols were NOT generated for DLL’s \EXE’s by default.  I just want to provide the steps needed to generate the PDB files for VB 6.0 and VC 6.0 applications.</p>
+<blockquote><p><b><span style="text-decoration: underline">To generate the symbols for DLL’s written in Visual Basic 6.0</span></b></p>
+<ol>
+<li>Open the Visual Basic Project in Visual Studio 6.0.</li>
+<li>From the Project menu option select the <b>&lt;project name&gt; Properties…</b> option.</li>
+<li>Go to the third tab (Compile) and check the Checkbox for <b>Create Symbolic Debug Info</b></li>
+<li>After selecting this,<strong> Recompile the project</strong>. This time you would see a file with a .PDB extension generated with the same name as the name of the DLL and in the same folder where the DLL is generated.</li>
+</ol>
+<p><b><span style="text-decoration: underline">To generate the symbols for a VC++ DLL</span></b></p>
+<ol>
+<li>Open the Project in Visual Studio.</li>
+<li>Go to project properties.</li>
+<li>Under the Linker Section, select the Debugging Sub Section and select YES for <b>Generate Debug Info. </b></li>
+<li><b>Rebuild the project.</b></li>
+</ol>
+</blockquote>
+<p><span style="color: #ff0000"><strong>After generating the symbols for your component, it is very important that you redeploy the newer DLL that got generated to the server because for a debugger to align the symbols properly the timestamp of the PDB and the timestamp of the DLL has to match.</strong></span></p>
+<p>The next thing to do after deploying symbols is to use a Windows native debugger to capture a dump on the exception of interest and debug it using the symbols that we generated. There are some native debuggers available for this purpose (like WINDBG, CDB, NTSD etc.) but I will talk about the Debug Diagnostic Tool which is easy to use and understand. You can get the Debug Diagnostic tool from <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=28bd5941-c458-46f1-b24d-f60151d875a3&amp;displaylang=en" target="_blank">Microsoft download center</a> and install it on the server where you are seeing the crash.</p>
+<p><strong><span style="text-decoration: underline"><a name="CONFIGURING_DEBUGGER"></a>Configuring the Debugger </span></strong></p>
+<p>Debug Diagnostic tool lets you generate as well analyze the dumps. This tool provides you a friendly GUI that can be configured to take dumps of any process. You can follow these steps to configure dumps for the COM+ Application which is crashing.</p>
+<ol>
+<li>Launch the tool by going to Start- &gt; Programs -&gt; Debug Diagnostic Tool 1.1 -&gt;DebugDiag 1.1</li>
+<li>In the <b>Select Rule Type</b> action, select <b>Crash</b> and click Next</li>
+<li>In the <b>Select Target Type</b> section, select <b>A specific MTS/COM+ Application</b>.</li>
+<li>From the list select the COM+ Application which is experiencing the Crash.</li>
+<li>In the <b>Advanced Confirmation</b> section, click on <b>Breakpoints</b> and then click <b>Add Breakpoint</b></li>
+<li>Select <b>ComSvcs!ComSvcsExceptionFilter</b> (I will talk about this shortly) and change the <b>Action Type</b> to <b>Full User Dump</b>. You can change the <b>Action Limit</b> to 5 which configures the tool to take 5 dumps and then complete the rule.</li>
+<li>Click <b>Ok</b> and click <b>Save and Close</b></li>
+<li>Click <strong>Next </strong>and in the Select Dump Location and Rule Name dialog, you can configure a friendly rule name and specify a location on the hard drive where the dump will be generated.</li>
+<li>Click <strong>Next</strong> and <b>Finish</b> to Activate the rule. Once the wizard completes the rule should come in the Rules section with a status of <strong>Active</strong> and should look like this.</li>
+</ol>
+<p>&nbsp;</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/3252.image_4.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/2678.image_thumb_1.png" alt="image" width="644" height="221" border="0" /></a></p>
+<p>&nbsp;</p>
+<p>For COM+ Applications, it is better to configure the <b>ComSvcs!ComSvcsExceptionFilter</b> breakpoint because that function implements the COM+ Failfast logic. Configuring the breakpoint on this function ensures that we are getting the dumps at the right time.</p>
+<p><strong><span style="text-decoration: underline"><a name="COLLECTING_DUMPS"></a>Collecting the Dumps</span></strong></p>
+<p>At this point you just have to wait for the crash to happen again. If this is an easily reproducible issue, you may just go ahead and reproduce it once so that the debugger is able to take the dumps. Whenever the dumps are collected by this tool, you will notice the <strong>UserDump Count</strong> variable incremented by 1.</p>
+<p>There may be multiple dumps generated by the tool based on what you configured it for but the one you are most interested to look at is the one which contains ComSvcsExceptionFilter in the name. The dump file that got generated on my machine as a result of this tool had the name</p>
+<p><strong><span style="font-size: xx-small">dllhost__PID__6492__Date__07_03_2010__Time_11_56_44AM__725__ComSvcs!ComSvcsExceptionFilter.dmp</span></strong></p>
+<p>&nbsp;</p>
+<p><strong><a name="ANALYZING_DUMPS"></a>Analyzing the Dump File</strong></p>
+<p>Now starts the fun part :-). As I mentioned before, you can use any native Windows Debugger to analyze the dump file but to keep things simple again, we can use the built in analyzer of Debug Diagnostic tool to view the relevant information about the dump file. To analyze the dump using DebugDiag, you just double click on the<strong> .dmp</strong> file that you generated in the previous step which will launch the DebugDiag analyzer automatically or you can follow these steps.</p>
+<ol>
+<li>Open Debug Diagnostic tool.</li>
+<li>Go to <strong>Advanced Analysis </strong>tab</li>
+<li>Click on <strong>Add Data </strong>Files</li>
+<li>Browse to the dump file generated in the previous step and click on <strong>Start Analysis</strong>.</li>
+</ol>
+<p>The moment you click on Start Analysis, the Debug Diagnostic tool will start downloading symbol files from the Microsoft Symbol server for the relevant DLLs and after running some expert analysis on the dumps, it will launch an Internet Explorer window with the HTML report of the analysis. So running the analysis on my dump file showed me this in the DebugDiag report.</p>
+<table class="mycustomContainer" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td style="padding-left: 5px" valign="top" width="50%">
+<table class="mycustomTable" border="0" cellspacing="2" cellpadding="2">
+<tbody>
+<tr class="mycustomHeader">
+<td>
+<table border="0" cellspacing="0" cellpadding="2" bgcolor="#818181">
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+</td>
+<td style="padding-left: 5px" width="100%">Analysis Summary</td>
+</tr>
+<tr id="Table_Results">
+<td class="mycustomText" width="15"></td>
+<td class="row">
+<table class="mycustomTable" border="1">
+<tbody>
+<tr class="mycustomText">
+<th>Type</th>
+<th>Description</th>
+<th>Recommendation</th>
+</tr>
+<tr>
+<td class="mycustomText" align="center" valign="middle"><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/6318.image_6.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/7418.image_thumb_2.png" alt="image" width="20" height="20" border="0" /></a>   Error</td>
+<td class="mycustomText">The following threads in <b>dllhost__PID__6492__Date__07_03_2010__Time_11_56_44AM__725__ComSvcs!ComSvcsExceptionFilter.dmp</b> are blocked by an <b>unhandled exception</b> which caused a <span style="color: #ff0000"><b>COM+ FailFast</b></span> to occur.<b></b>( <a href="29Thread4444"><b>13</b></a> )</p>
+<p><b>4.55%</b> of threads blocked</td>
+<td class="mycustomText">Please see the <span style="color: #ff0000"><b>Recovered Call Stack</b></span> for thread <a href="29Thread4444"><b>13</b></a> based on the restored exception and context record passed to the exception filter.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p>If you click on proper thread number in the above report, you can actually see the callstack of the thread which caused the exception and notice how nicely the report is showing you the recovered callstack for the exactly exception. In my case, I see the following callstack</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<table class="mycustomContainer" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td style="padding-left: 5px" valign="top" width="50%">
+<table class="mycustomTable" border="0" cellspacing="2" cellpadding="2">
+<tbody>
+<tr id="Table_Data">
+<td class="row">
+<div id="Dump6492:29-s"><span style="color: #ff0000"><b>Recovered stack for thread 13</b></span></p>
+<table class="mycustomText" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<th>Function</th>
+<th>    Arg 1</th>
+<th>    Arg 2</th>
+<th>    Arg 3</th>
+<th>  Source</th>
+</tr>
+<tr>
+<td>ntdll!KiRaiseUserExceptionDispatcher+37</td>
+<td>    <span style="font-family: courier new">7c826d49</span></td>
+<td>    <span style="font-family: courier new">77e63eb3</span></td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ntdll!KiFastSystemCall+3</td>
+<td>    <span style="font-family: courier new">77e63eb3</span></td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">0114eacc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ntdll!ZwClose+c</td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">0114eacc</span></td>
+<td>    <span style="font-family: courier new">11001d14</span></td>
+<td></td>
+</tr>
+<tr>
+<td>kernel32!CloseHandle+59</td>
+</tr>
+</tbody>
+</table>
+<p>&lt;&gt;&lt;&gt;&lt;/&gt; &lt;/&gt;</p>
+</div>
+</td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">000d6df8</span></td>
+<td>    <span style="font-family: courier new">000b9f98</span></td>
+<td></td>
+</tr>
+<tr>
+<td><span style="color: #ff0000">Arithmetic!DllCanUnloadNow+272</span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #ff0000">  </span></td>
+</tr>
+<tr>
+<td><span style="color: #ff0000">Arithmetic!DllCanUnloadNow+1c4</span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #ff0000">  </span></td>
+</tr>
+<tr>
+<td><span style="color: #ff0000">Arithmetic!DllCanUnloadNow+117</span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #ff0000">  </span></td>
+</tr>
+<tr>
+<td><span style="color: #ff0000">Arithmetic!DllCanUnloadNow+6a</span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #ff0000">    <span style="font-family: courier new">00000002</span></span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!DispCallFunc+16a</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">0000001c</span></td>
+<td>    <span style="font-family: courier new">00000004</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvbvm60!VBStrToLong+cf</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">11001320</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvbvm60!rtFindFirstFile+185</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td>    <span style="font-family: courier new">000d63dc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!IDispatch_Invoke_Stub+52</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td>    <span style="font-family: courier new">000d63dc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!IDispatch_RemoteInvoke_Thunk+5b</td>
+<td>    <span style="font-family: courier new">0114f650</span></td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>rpcrt4!NdrStubCall2+214</td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>rpcrt4!CStdStubBuffer_Invoke+c6</td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!CStubWrapper::Invoke+9f</td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!SyncStubInvoke+37</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000ab790</span></td>
+<td>    <span style="font-family: courier new">000bf9d0</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!StubInvoke+a7</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000b9e48</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!CCtxComChnl::ContextInvoke+ec</td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!MTAInvoke+1a</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!STAInvoke+48</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!AppInvoke+a3</td>
+<td>    <span style="font-family: courier new">d0908070</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ComInvokeWithLockAndIPID+2c5</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">000a1350</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ComInvoke+ca</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td>    <span style="font-family: courier new">000c71f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ThreadDispatch+23</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">0114fe0c</span></td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ThreadWndProc+fe</td>
+<td>    <span style="font-family: courier new">000b9b70</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td>    <span style="font-family: courier new">0000babe</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!InternalCallWinProc+28</td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td>    <span style="font-family: courier new">00550f40</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!UserCallWinProcCheckWow+151</td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td>    <span style="font-family: courier new">00550f40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!DispatchMessageWorker+327</td>
+<td>    <span style="font-family: courier new">000cbdd4</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">0114fecc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!DispatchMessageW+f</td>
+<td>    <span style="font-family: courier new">000cbdd4</span></td>
+<td>    <span style="font-family: courier new">000cbdd0</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAQueueLessMessageWork::DoWork+4e</td>
+<td>    <span style="font-family: courier new">000cbd60</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td>    <span style="font-family: courier new">000cbdc4</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::DoWork+18</td>
+<td>    <span style="font-family: courier new">000cbdd0</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::ProcessQueueWork+37</td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00037918</span></td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::WorkerLoop+190</td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvcrt!_endthreadex+a3</td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>kernel32!BaseThreadStart+34</td>
+<td>    <span style="font-family: courier new">77bcb4bc</span></td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>So all that is fine but why am I seeing DllCanUnloadNow and not the right function name?</strong></p>
+<p>&nbsp;</p>
+<p>The reason for that is that we have not configured Debug Diagnostic to load the right symbols for my DLL. This configuration in Debug Diagnostic tool is done under the <strong>Tools </strong>menu by selecting <strong>Options and Settings. </strong>These are the default settings.</p>
+<p>&nbsp;</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/8228.image_8.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0118.image_thumb_3.png" alt="image" width="487" height="393" border="0" /></a></p>
+<p>&nbsp;</p>
+<p>All you need to do is append the path to the folder where the PDB files for your component are to “Symbol Search Path for analysis”. So in my case, the PDB files are present inside<em> E:\COMProjects\ArithmeticComponent</em> folder, so my Symbol Search Path for analysis will become</p>
+<p><strong>srv*c:\symcache*http://msdl.microsoft.com/downloads/symbols<span style="color: #800080">;E:\COMProjects\ArithmeticComponent</span></strong></p>
+<p>Now if I run Debug Diagnostic tool again on the same report, I can see the functions reported in a better way but before doing that I would like to turn on one more setting under the <strong>Preferences</strong> tab under <strong>Options and Setting</strong> and that is selecting “<strong>Include source and line information in analysis reports</strong>”</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5857.image_10.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/4705.image_thumb_4.png" alt="image" width="244" height="199" border="0" /></a></p>
+<p>&nbsp;</p>
+<p>After making these changes I re-run my report and now if I look at the Recovered Callstack for Thread 13, I can see the right function names</p>
+<table class="mycustomContainer" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td style="padding-left: 5px" valign="top" width="50%">
+<table class="mycustomTable" border="0" cellspacing="2" cellpadding="2">
+<tbody>
+<tr id="Table_Data">
+<td class="row">
+<div id="Dump6492:29-s"><span style="color: #ff0000"><b>Recovered stack for thread 13</b></span></p>
+<table class="mycustomText" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<th>Function</th>
+<th>    Arg 1</th>
+<th>    Arg 2</th>
+<th>    Arg 3</th>
+<th>  Source</th>
+</tr>
+<tr>
+<td>ntdll!KiRaiseUserExceptionDispatcher+37</td>
+<td>    <span style="font-family: courier new">7c826d49</span></td>
+<td>    <span style="font-family: courier new">77e63eb3</span></td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ntdll!KiFastSystemCall+3</td>
+<td>    <span style="font-family: courier new">77e63eb3</span></td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">0114eacc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ntdll!ZwClose+c</td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">0114eacc</span></td>
+<td>    <span style="font-family: courier new">11001d14</span></td>
+<td></td>
+</tr>
+<tr>
+<td>kernel32!CloseHandle+59</td>
+<td>    <span style="font-family: courier new">00000006</span></td>
+<td>    <span style="font-family: courier new">000d6df8</span></td>
+<td>    <span style="font-family: courier new">000b9f98</span></td>
+<td></td>
+</tr>
+<tr>
+<td><span style="color: #008000">Arithmetic!Maths::CallThirdFunction+59</span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #008000">  E:\COMProjects\ArithmeticComponent\Maths.cls @ 37 + 19</span></td>
+</tr>
+<tr>
+<td><span style="color: #008000">Arithmetic!Maths::CallSecondFunction+58</span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #008000">  E:\COMProjects\ArithmeticComponent\Maths.cls @ 29 + 18</span></td>
+</tr>
+<tr>
+<td><span style="color: #008000">Arithmetic!Maths::CallFirstFunction+58</span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #008000">  E:\COMProjects\ArithmeticComponent\Maths.cls @ 24 + 18</span></td>
+</tr>
+<tr>
+<td><span style="color: #008000">Arithmetic!Maths::DoSomeCalculation+58</span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">000d4cb8</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000001</span></span></td>
+<td><span style="color: #008000">    <span style="font-family: courier new">00000002</span></span></td>
+<td><span style="color: #008000">  E:\COMProjects\ArithmeticComponent\Maths.cls @ 19 + 18</span></td>
+</tr>
+<tr>
+<td>oleaut32!DispCallFunc+16a</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">0000001c</span></td>
+<td>    <span style="font-family: courier new">00000004</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvbvm60!VBStrToLong+cf</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">11001320</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvbvm60!rtFindFirstFile+185</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td>    <span style="font-family: courier new">000d63dc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!IDispatch_Invoke_Stub+52</td>
+<td>    <span style="font-family: courier new">000d4cb8</span></td>
+<td>    <span style="font-family: courier new">60030000</span></td>
+<td>    <span style="font-family: courier new">000d63dc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!IDispatch_RemoteInvoke_Thunk+5b</td>
+<td>    <span style="font-family: courier new">0114f650</span></td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>rpcrt4!NdrStubCall2+214</td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>rpcrt4!CStdStubBuffer_Invoke+c6</td>
+<td>    <span style="font-family: courier new">000d52e0</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td></td>
+</tr>
+<tr>
+<td>oleaut32!CStubWrapper::Invoke+9f</td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!SyncStubInvoke+37</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000ab790</span></td>
+<td>    <span style="font-family: courier new">000bf9d0</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!StubInvoke+a7</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">000b9e48</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!CCtxComChnl::ContextInvoke+ec</td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!MTAInvoke+1a</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!STAInvoke+48</td>
+<td>    <span style="font-family: courier new">000ba4e8</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!AppInvoke+a3</td>
+<td>    <span style="font-family: courier new">d0908070</span></td>
+<td>    <span style="font-family: courier new">000bf458</span></td>
+<td>    <span style="font-family: courier new">000c14f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ComInvokeWithLockAndIPID+2c5</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">000a1350</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ComInvoke+ca</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td>    <span style="font-family: courier new">000c71f8</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ThreadDispatch+23</td>
+<td>    <span style="font-family: courier new">000ba490</span></td>
+<td>    <span style="font-family: courier new">0114fe0c</span></td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td></td>
+</tr>
+<tr>
+<td>ole32!ThreadWndProc+fe</td>
+<td>    <span style="font-family: courier new">000b9b70</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td>    <span style="font-family: courier new">0000babe</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!InternalCallWinProc+28</td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td>    <span style="font-family: courier new">00550f40</span></td>
+<td>    <span style="font-family: courier new">00000400</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!UserCallWinProcCheckWow+151</td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">776bc27c</span></td>
+<td>    <span style="font-family: courier new">00550f40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!DispatchMessageWorker+327</td>
+<td>    <span style="font-family: courier new">000cbdd4</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">0114fecc</span></td>
+<td></td>
+</tr>
+<tr>
+<td>user32!DispatchMessageW+f</td>
+<td>    <span style="font-family: courier new">000cbdd4</span></td>
+<td>    <span style="font-family: courier new">000cbdd0</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAQueueLessMessageWork::DoWork+4e</td>
+<td>    <span style="font-family: courier new">000cbd60</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td>    <span style="font-family: courier new">000cbdc4</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::DoWork+18</td>
+<td>    <span style="font-family: courier new">000cbdd0</span></td>
+<td>    <span style="font-family: courier new">00000001</span></td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::ProcessQueueWork+37</td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00037918</span></td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td></td>
+</tr>
+<tr>
+<td>comsvcs!CSTAThread::WorkerLoop+190</td>
+<td>    <span style="font-family: courier new">000cbd40</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>msvcrt!_endthreadex+a3</td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+<tr>
+<td>kernel32!BaseThreadStart+34</td>
+<td>    <span style="font-family: courier new">77bcb4bc</span></td>
+<td>    <span style="font-family: courier new">00037a48</span></td>
+<td>    <span style="font-family: courier new">00000000</span></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p>If you read carefully, I am even getting the line numbers in my Visual Basic .CLS file which tell me the exact line of code where the problem happened. Now isn't that cool !!!</p>
+<p>Here is the complete code of my sample component</p>
+<blockquote><p><span style="font-size: x-small"><span style="font-family: courier new,courier">Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long</span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Public Function DoSomeCalculation(ByVal number1 As Integer, ByVal number2 As Integer, ByVal number3 As Integer) As Integer</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">DoSomeCalculation = CallFirstFunction(number1, number2, number3)</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">End Function</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Function CallFirstFunction(ByVal number1 As Integer, ByVal number2 As Integer, ByVal number3 As Integer) As Integer</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">CallFirstFunction = CallSecondFunction(number1, number2, number3)</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">End Function</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Function CallSecondFunction(ByVal number1 As Integer, ByVal number2 As Integer, ByVal number3 As Integer) As Integer</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">CallSecondFunction = CallThirdFunction(number1, number2, number3)</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">End Function</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Function CallThirdFunction(ByVal number1 As Integer, ByVal number2 As Integer, ByVal number3 As Integer) As Integer</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Dim sum As Integer</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">Dim returnValue As Long</span></span></span></p>
+<p><span style="color: #ff0000;font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">returnValue = CloseHandle(number1 + number2 + number3)</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">CallThirdFunction = returnValue</span></span></span></p>
+<p><span style="font-size: x-small"><span style="font-family: courier new,courier"><span style="font-size: x-small">End Function</span></span></span></p></blockquote>
+<p>&nbsp;</p>
+<p>So you can see that I am just passing a bad value (1 + 2 + 3 = 7)  to the Kernel32's <a title="CloseHandle" href="http://msdn.microsoft.com/en-us/library/ms724211(VS.85).aspx">CloseHandle</a> API which ends up throwing the "Invalid Handle" exception.</p>
+<p>The same steps can be used for troubleshooting crashes in COM+ Applications written in any programming language provided you generate the right symbols and you configure the debugger to point to the right symbols.</p>
+<p>I am attaching the complete report to the end of this blog post so that you can review what else is logged in the report.</p>
+<p><strong><span style="font-size: medium">HAPPY DEBUGGING !!!</span></strong></p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/10/03/41/64/CrashHang_Report__PID_6492__0716201016530581.zip">CrashHang_Report__PID_6492__0716201016530581.zip</a></p>

@@ -1,0 +1,177 @@
+---
+layout: post
+title: How to get the WS-AT Transactions Tab in DCOMCNFG ?
+date: 2012-10-05 09:01:15.000000000 +05:30
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories: []
+tags: []
+meta:
+  _edit_last: '106733'
+  opengraph_tags: |
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="How to get the WS-AT Transactions Tab in DCOMCNFG ?" />
+    <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2013/10/05/how-to-get-the-ws-at-transactions-tab-in-dcomcnfg/" />
+    <meta property="og:site_name" content="Web Technology Blog" />
+    <meta property="og:description" content="If you worked with Distributed Transactions, you may already be aware that they are configured in “Component services” MMC. We can also configure WS-AT transactions in “Component Services”, but there are a few steps required to configure it properly. In this blog I will talk about how to enable this functionality in the MMC and..." />
+    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/8400.clip_image001_thumb_6DCCD4AF.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="How to get the WS-AT Transactions Tab in DCOMCNFG ?" />
+    <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2013/10/05/how-to-get-the-ws-at-transactions-tab-in-dcomcnfg/" />
+    <meta name="twitter:description" content="If you worked with Distributed Transactions, you may already be aware that they are configured in “Component services” MMC. We can also configure WS-AT transactions in “Component Services”, but there are a few steps required to configure it properly. In this blog I will talk about how to enable this functionality in the MMC and..." />
+    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/8400.clip_image001_thumb_6DCCD4AF.png" />
+author:
+  login: puneetg
+  email: puneetg@microsoft.com
+  display_name: PuneetG
+  first_name: Puneet
+  last_name: Gupta
+permalink: "/puneetgupta/2012/10/05/how-to-get-the-ws-at-transactions-tab-in-dcomcnfg/"
+---
+<p>If you worked with Distributed Transactions, you may already be aware that they are configured in “Component services” MMC. We can also configure WS-AT transactions in “Component Services”, but there are a few steps required to configure it properly. In this blog I will talk about how to enable this functionality in the MMC and the various issues that you can run into while configuring it.</p>
+<p>By default on a new installation of any Operating System, the WS-AT TAB is not present in the Component Services MMC under the MSDTC settings and this is how the default UI looks like.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/6765.clip_image001_087970C9.png"><img title="clip_image001" src="{{ site.baseurl }}/assets/8400.clip_image001_thumb_6DCCD4AF.png" alt="clip_image001" width="267" height="295" border="0" /></a></p>
+<p><strong>WsatUI.dll</strong> is the managed UI Extension DLL that contains this TAB functionality and it needs to be registered using the <strong>regasm </strong>tool.</p>
+<p><strong><span style="text-decoration: underline">So where to get WSATUI.DLL from?</span></strong></p>
+<p>This DLL ships as a part of the Windows SDK for .NET Framework and if the machine has.NET Framework 4.0, you need to install the <strong>Windows 7 SDK for .NET Framework 4.0 </strong>from <a href="http://www.microsoft.com/en-us/download/dlx/listdetailsview.aspx?id=8279">http://www.microsoft.com/en-us/download/dlx/listdetailsview.aspx?id=8279</a> and if the machine has the .NET Framework 3.0 or .NET Framework 3.5 installed, then you can install the <strong>Microsoft Windows SDK for Windows 7 and .NET Framework 3.5 SP1</strong> from <a href="http://www.microsoft.com/en-us/download/details.aspx?id=3138">http://www.microsoft.com/en-us/download/details.aspx?id=3138</a>. It is a huge download and it can take some time to download and install. Also don’t get confused by the name of the SDK – the name says <strong>Windows 7 SDK for .net framework 4.0</strong> but this can be installed on Windows Server 2003 or Windows Server 2008 also. To make it a bit more clear, the <strong>Windows 7 SDK for .net framework 4.0 </strong>is a Software development Kit for creating apps that run on Windows 7 and .Net Framework and can be installed on prior operating systems too.</p>
+<p>Another important thing to note is that you shouldn’t worry about the CPU architecture or the version of .NET Framework that you are using in <strong>your application</strong> because this DLL is used by Component Services MMC only and your application will never be using this DLL directly. So even if your application uses .NET Framework 3.0 or 3.5 on a machine that has .NET 4.0 installed, you should still install the <strong>Windows 7 SDK for .NET Framework 4.0</strong></p>
+<p><strong><span style="text-decoration: underline">Registering the WSATUI.DLL</span></strong></p>
+<p>After the installation open the SDK <strong>Command shell</strong> from the <strong>Start</strong> -&gt; <strong>Programs -&gt; Microsoft Windows SDK &lt;version_number&gt;</strong> menu (on VISTA and above operating systems, right click on the <strong>Command shell</strong> and choose “Run As Administrator” and run the right REGASM command (assuming you installed the SDK in the default locations)</p>
+<p><strong><span style="text-decoration: underline">Table 1</span></strong></p>
+<table style="border: currentColor;border-collapse: collapse">
+<tbody>
+<tr>
+<td style="padding: 0in 5.4pt;border: 1pt solid windowtext" width="134">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Operating System Processor Architecture</span></p>
+<p>&nbsp;</td>
+<td style="border-width: 1pt 1pt 1pt medium;border-style: solid solid solid none;border-color: windowtext windowtext windowtext currentColor;padding: 0in 5.4pt" width="120">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Highest Version of Framework installed on the computer</span></p>
+<p>&nbsp;</td>
+<td style="border-width: 1pt 1pt 1pt medium;border-style: solid solid solid none;border-color: windowtext windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Installed SDK Version</span></p>
+<p>&nbsp;</td>
+<td style="border-width: 1pt 1pt 1pt medium;border-style: solid solid solid none;border-color: windowtext windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Command to Run</span></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt;border-style: none solid solid;border-color: currentColor windowtext windowtext;padding: 0in 5.4pt" rowspan="4" width="134">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">32 Bit</span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" rowspan="3" width="120">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">3.0 , 3.5</span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">V6.0</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\Program Files\Microsoft SDKs\Windows\v6.0\Bin\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">V6.1</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">v7.0</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\Program Files\Microsoft SDKs\Windows\v7.0\Bin\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="120">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">4.0 </span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">(see note below)</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">v7.1</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt;border-style: none solid solid;border-color: currentColor windowtext windowtext;padding: 0in 5.4pt" rowspan="4" width="134">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">64 Bit</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" rowspan="3" width="120">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">3.0 or 3.5</span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">V6.0</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\ Program Files\Microsoft SDKs\Windows\v6.0\Bin\x64\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">V6.1</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\ Program Files\Microsoft SDKs\Windows\v6.1\Bin\ x64\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">v7.0</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\ Program Files\Microsoft SDKs\Windows\v7.0\Bin\ x64\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</td>
+</tr>
+<tr style="height: 67.65pt">
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="120">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">4.0 </span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt"> </span></p>
+<p>&nbsp;</p>
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">(see Note below)</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="112">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">v7.1</span></p>
+<p>&nbsp;</td>
+<td style="border-width: medium 1pt 1pt medium;border-style: none solid solid none;border-color: currentColor windowtext windowtext currentColor;padding: 0in 5.4pt" width="270">
+<p style="margin: 0in 0in 0pt;line-height: normal"><span style="font-size: 11pt">Regasm /codebase “</span><strong><span style="font-size: 11pt">c:\ Program Files\Microsoft SDKs\Windows\v7.1\Bin\ x64\WsatUI.dll”</span></strong></p>
+<p>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE: The version of Windows 7 SDK for .NET Framework 4.0 have an issue that while running the <strong>regasm</strong> command you may get an error complaining about the assembly Authenticode signatures and you may get an error like this.</p>
+<p><span style="color: #0000ff">C:\Program Files\Microsoft SDKs\Windows\v7.1&gt;regasm /codebase "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\wsatui.dll" Microsoft (R) .NET Framework Assembly Registration Utility 4.0.30319.1 Copyright (C) Microsoft Corporation 1998-2004.  All rights reserved. RegAsm : error RA0000 : Could not load file or assembly 'WsatUI, Version=3.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies. Strong name validation failed. (Exception from HRESULT: 0x8013141A) </span></p>
+<p>This happens due to a small issue in the file that is packaged in the SDK. If you run in to this issue, you can do one of the two things to fix this problem</p>
+<ul>
+<li>Turn off strong name validation just on the WSATUI.DLL by running the following command from the same SDK CMD shell</li>
+</ul>
+<p><span style="color: #0000ff">C:\Program Files\Microsoft SDKs\Windows\v7.1&gt;sn -Vr "c:\Program Files\Microsoft SDKs\Windows\v7.1\bin\wsatui.dll" Microsoft (R) .NET Framework Strong Name Utility  Version 4.0.30319.1 Copyright (c) Microsoft Corporation.  All rights reserved. Verification entry added for assembly 'WsatUI,B03F5F7F11D50A3A' </span></p>
+<p>After this you should be able to run the REGASM command</p>
+<ul>
+<li>If you don’t want to turn off the strong name validation on this DLL, then you need to replace the WSATUI.DLL in the folder <strong>c:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\</strong> with the DLL from a machine which has got <strong>Visual Studio 2010</strong> installed. On a machine that has Visual Studio 2010 installed, you can get this DLL from the folder <strong>C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\WSATUI.dll</strong> and copy it to the destination server. Once that is done you can run the <strong>regasm</strong> command and it should work.</li>
+</ul>
+<p>If the above steps are followed, the DLL’s should be registered correctly and you should be able to see the WS-AT tab, however if this is not done correctly or if there is some kind of a version mismatch, you may see an error like the below one when you try to go to the WS-AT TAB in the Component Services</p>
+<p>The error “The installed version of Windows Communication Foundation does not match the version of the WSAT configuration tool” will come if the version of the WSATUI.DLL registered on the server is <strong><span style="text-decoration: underline">lower</span></strong> than the <strong><span style="text-decoration: underline">highest version of the framework</span></strong> installed on the server. To check the highest version of .net framework installed go to <strong>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP</strong> and look for the highest version. So from the below screenshot, you can see that the machine has .net framework 4.0 installed</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5148.clip_image002_69AA28C9.png"><img style="margin: 0px" title="clip_image002" src="{{ site.baseurl }}/assets/4643.clip_image002_thumb_56F52F12.png" alt="clip_image002" width="244" height="132" border="0" /></a></p>
+<p>The next thing to check is the version of the WSATUI.DLL that is registered on the server and that can be looked inside <strong>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WSAT\3.0. </strong>This key will have a string value called PATH and that will tell us the location of the WSATUI.DLL.</p>
+<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/4705.image_12EA1F1C.png"><img title="image" src="{{ site.baseurl }}/assets/4774.image_thumb_38076988.png" alt="image" width="788" height="109" border="0" /></a></p>
+<p>If the location of WSATUI.DLL shows as 6.0,6.1 or 7.0 , WSATUI.dll will only support 3.5 Framework version. If it shows as registered from v7.1 path, it can work with 4.0 framework version.</p>
+<p>So if you see that the version of the .NET Framework installed on the machine is higher than the version that WSATUI.DLL supports, then follow the combinations given in the <strong><span style="text-decoration: underline">Table-1</span></strong> (above in this article) and install the right version of SDK and register the WSATUI.DLL from the correct path and that should fix this error.</p>
