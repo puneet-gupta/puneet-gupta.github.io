@@ -17,12 +17,12 @@ meta:
     <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool/" />
     <meta property="og:site_name" content="Web Technology Blog" />
     <meta property="og:description" content="Every day the Distributed Services support team in Microsoft helps customers in troubleshooting some of the most common Distributed Transaction errors which are a direct result of MSRPC (Microsoft Remote Procedure Call) communication failing in a network because of some SecurityFirewall settings. On an application layer (like SQL), these are the common error messages that..." />
-    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_thumb.jpg" />
+    <meta property="og:image" content="https://puneet-gupta.github.io/assets/EmptyPortRange_thumb.jpg" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Troubleshooting MSDTC issues with the DTCPing tool" />
     <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2008/11/12/troubleshooting-msdtc-issues-with-the-dtcping-tool/" />
     <meta name="twitter:description" content="Every day the Distributed Services support team in Microsoft helps customers in troubleshooting some of the most common Distributed Transaction errors which are a direct result of MSRPC (Microsoft Remote Procedure Call) communication failing in a network because of some SecurityFirewall settings. On an application layer (like SQL), these are the common error messages that..." />
-    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_thumb.jpg" />
+    <meta name="twitter:image" content="https://puneet-gupta.github.io/assets/EmptyPortRange_thumb.jpg" />
 author:
   login: puneetg
   email: puneetg@microsoft.com
@@ -170,10 +170,10 @@ Error(0x6B9) at rpcUtil.cpp @54<br />
 3. Under the My Computer Properties look under the Default Protocols tab.<br />
 4. Over there make sure that Connection-oriented TCP/IP is selected and then click on Properties.<br />
 5. You will see a window like this<br />
-<a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/EmptyPortRange_2.jpg"><img style="border-width: 0px" title="EmptyPortRange" src="{{ site.baseurl }}/assets/EmptyPortRange_thumb.jpg" alt="EmptyPortRange" width="346" height="326" border="0" /></a></p>
+<a href="https://puneet-gupta.github.io/assets/EmptyPortRange_2.jpg"><img style="border-width: 0px" title="EmptyPortRange" src="{{ site.baseurl }}/assets/EmptyPortRange_thumb.jpg" alt="EmptyPortRange" width="346" height="326" border="0" /></a></p>
 <p>If you don’t see a range above and the window looks exactly like the one above, that would mean that the DCOM port range is not configured on the machine.<br />
 You can click Add in the above window and type the range (let's say as 5000-5100) and say Ok. Make sure it looks like this. (Both the radio buttons should be selected for Internet Range)</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/TroubleshootingMSDTCissueswiththeDTCPing_58B4/PortRange5000_2.jpg"><img style="border-width: 0px" title="PortRange5000" src="{{ site.baseurl }}/assets/PortRange5000_thumb.jpg" alt="PortRange5000" width="346" height="349" border="0" /></a><br />
+<p><a href="https://puneet-gupta.github.io/assets/PortRange5000_2.jpg"><img style="border-width: 0px" title="PortRange5000" src="{{ site.baseurl }}/assets/PortRange5000_thumb.jpg" alt="PortRange5000" width="346" height="349" border="0" /></a><br />
 You have to configure this range on both the machines and after that you have to <b>reboot both the servers</b> for this Range to take effect. <b>After doing that you have to open up the same range on your firewall bi-directionally</b>.</p>
 <p>Let's say you have already opened enough ports but still you get this error message. In this case you should run NETSTAT -anob on the machine which is returning this error message and try to find out which program is using all the ports. You should look for the ports that you have defined in the RPC Port range and look for all EXE's which are listening on that port range.</p>
 <p>We hope this article gives you enough insight on how to troubleshoot issues with MSDTC using the DTCPing tool and we hope that going further you should be able to troubleshoot and diagnose issues related to MSDTC on your own. If you still need assistance from us to solve any DTCPING errors that were talked about in the above blog, please feel free to collect the DTCPING log files from both the machine (where DTCPING was ran) and open up a Support Incident with Microsoft. We (the MSDTC support team) will be more than happy to provide you a timely resolution to the problem once we have the right data to look at.</p>

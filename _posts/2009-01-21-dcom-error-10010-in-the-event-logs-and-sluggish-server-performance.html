@@ -17,12 +17,12 @@ meta:
     <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=173" />
     <meta property="og:site_name" content="Web Technology Blog" />
     <meta property="og:description" content="We have come across this specific issue on Windows 2003 (post service pack 1) and Windows XP (post service pack 2) where the machine experiences slow performance and we observe many DCOM 10010 ERRORS in the event logs. If you are running in to this issue, you may see some of the symptoms/errors listed below...." />
-    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_thumb.png" />
+    <meta property="og:image" content="https://puneet-gupta.github.io/assets/image_thumb.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="DCOM Error 10010 in the Event logs and SLUGGISH server performance" />
     <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=173" />
     <meta name="twitter:description" content="We have come across this specific issue on Windows 2003 (post service pack 1) and Windows XP (post service pack 2) where the machine experiences slow performance and we observe many DCOM 10010 ERRORS in the event logs. If you are running in to this issue, you may see some of the symptoms/errors listed below...." />
-    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_thumb.png" />
+    <meta name="twitter:image" content="https://puneet-gupta.github.io/assets/image_thumb.png" />
 author:
   login: puneetg
   email: puneetg@microsoft.com
@@ -55,7 +55,7 @@ permalink: "/puneetgupta/2009/01/21/dcom-error-10010-in-the-event-logs-and-slugg
 </ul>
 <p>The interesting thing to note here is that most of the components which are failing or performing slowly are the basic system components only. The GUID {BA126AD1-2166-11D1-B1D0-00805FC1270E}  is the CLISID (class id) for Network Connection Manager Class and the GUID {8BC3F05E-D86B-11D0-A075-00C04FB68820} is the CLSID for WMI. The one big common thing between all these symptoms is that all the programs which exhibit the above symptoms are dependent on DCOM.</p>
 <p>If you end up with the symptoms/errors listed above, one quick thing to check would be the <strong>permissions on the HKCR\CLSID</strong> registry key. By default this is how the permission on that key should look like.</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/TNBlogsFS/BlogFileStorage/blogs_msdn/distributedservices/WindowsLiveWriter/DCOMError10010intheEventlogsandSLUGGISHs_91E1/image_2.png"><img style="border: 0px currentColor" title="image" src="{{ site.baseurl }}/assets/image_thumb.png" alt="image" width="204" height="244" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/image_2.png"><img style="border: 0px currentColor" title="image" src="{{ site.baseurl }}/assets/image_thumb.png" alt="image" width="204" height="244" border="0" /></a></p>
 <p>If you are running into this issue, you will see that the USERS group is not listed in the ACL list for this registry key. You might see an account with the name RESTRICTED listed out there. To fix the problem, you can configure the ACLS on the HKCR\CLSID key in the default way. For Windows 2003, this is how the default permissions on the HKCR\CLSID should look like.</p>
 <ul>
 <li>Administrators – FULL CONTROL</li>

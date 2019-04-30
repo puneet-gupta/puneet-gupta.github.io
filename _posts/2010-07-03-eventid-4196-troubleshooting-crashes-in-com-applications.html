@@ -17,12 +17,12 @@ meta:
     <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=163" />
     <meta property="og:site_name" content="Web Technology Blog" />
     <meta property="og:description" content="Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As..." />
-    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/0272.image_thumb.png" />
+    <meta property="og:image" content="https://puneet-gupta.github.io/assets/0272.image_thumb.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Auto Draft" />
     <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/?p=163" />
     <meta name="twitter:description" content="Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As..." />
-    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/0272.image_thumb.png" />
+    <meta name="twitter:image" content="https://puneet-gupta.github.io/assets/0272.image_thumb.png" />
 author:
   login: puneetg
   email: puneetg@microsoft.com
@@ -33,8 +33,8 @@ permalink: "/puneetgupta/2010/07/03/eventid-4196-troubleshooting-crashes-in-com-
 ---
 <p>Typically we expect that a piece of code that works once should work ALWAYS but this is not as simple as it sounds. Even though you have tested your component or application enough, it is not always possible to test all the codepaths and all sorts of situations that can arise in an application. As a result of this you may end up seeing intermittent or unexpected crashes in your application. Today we will learn about collecting some valuable information for unexpected crashes that can happen in COM+ components and how to deal with them.</p>
 <p><strong><span style="text-decoration: underline">What is a Crash?</span></strong> – The term <em>CRASH </em>is used by different people in various different ways. In our(or my) definition a crash is an unexpected termination of a process as result of an unhandled exception in the code. If COM+ encounters an unhandled exception in the component code the COM+ Runtime terminates the process immediately and logs the following event in the event viewer letting the user know that a crash has happened. This is called COM+ Failfast</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/5383.image_2.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0272.image_thumb.png" alt="image" width="405" height="448" border="0" /></a></p>
 <p><strong>This particular behavior of COM+ terminating the process on an unexpected error condition is termed as COM+ Failfast</strong>.</p>
 <p>This blog will list out the steps required to troubleshoot a COM+ Failfast and it can be summarized as:-</p>
 <ol>
@@ -144,7 +144,7 @@ kernel32!GetModuleHandleA + 0xdf</p></blockquote>
 <li>Click <strong>Next</strong> and <b>Finish</b> to Activate the rule. Once the wizard completes the rule should come in the Rules section with a status of <strong>Active</strong> and should look like this.</li>
 </ol>
 <p>&nbsp;</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/3252.image_4.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/2678.image_thumb_1.png" alt="image" width="644" height="221" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/3252.image_4.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/2678.image_thumb_1.png" alt="image" width="644" height="221" border="0" /></a></p>
 <p>&nbsp;</p>
 <p>For COM+ Applications, it is better to configure the <b>ComSvcs!ComSvcsExceptionFilter</b> breakpoint because that function implements the COM+ Failfast logic. Configuring the breakpoint on this function ensures that we are getting the dumps at the right time.</p>
 <p><strong><span style="text-decoration: underline"><a name="COLLECTING_DUMPS"></a>Collecting the Dumps</span></strong></p>
@@ -190,7 +190,7 @@ kernel32!GetModuleHandleA + 0xdf</p></blockquote>
 <th>Recommendation</th>
 </tr>
 <tr>
-<td class="mycustomText" align="center" valign="middle"><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/6318.image_6.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/7418.image_thumb_2.png" alt="image" width="20" height="20" border="0" /></a>   Error</td>
+<td class="mycustomText" align="center" valign="middle"><a href="https://puneet-gupta.github.io/assets/6318.image_6.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/7418.image_thumb_2.png" alt="image" width="20" height="20" border="0" /></a>   Error</td>
 <td class="mycustomText">The following threads in <b>dllhost__PID__6492__Date__07_03_2010__Time_11_56_44AM__725__ComSvcs!ComSvcsExceptionFilter.dmp</b> are blocked by an <b>unhandled exception</b> which caused a <span style="color: #ff0000"><b>COM+ FailFast</b></span> to occur.<b></b>( <a href="29Thread4444"><b>13</b></a> )</p>
 <p><b>4.55%</b> of threads blocked</td>
 <td class="mycustomText">Please see the <span style="color: #ff0000"><b>Recovered Call Stack</b></span> for thread <a href="29Thread4444"><b>13</b></a> based on the restored exception and context record passed to the exception filter.</td>
@@ -497,12 +497,12 @@ kernel32!GetModuleHandleA + 0xdf</p></blockquote>
 <p>&nbsp;</p>
 <p>The reason for that is that we have not configured Debug Diagnostic to load the right symbols for my DLL. This configuration in Debug Diagnostic tool is done under the <strong>Tools </strong>menu by selecting <strong>Options and Settings. </strong>These are the default settings.</p>
 <p>&nbsp;</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/8228.image_8.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0118.image_thumb_3.png" alt="image" width="487" height="393" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/8228.image_8.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/0118.image_thumb_3.png" alt="image" width="487" height="393" border="0" /></a></p>
 <p>&nbsp;</p>
 <p>All you need to do is append the path to the folder where the PDB files for your component are to “Symbol Search Path for analysis”. So in my case, the PDB files are present inside<em> E:\COMProjects\ArithmeticComponent</em> folder, so my Symbol Search Path for analysis will become</p>
 <p><strong>srv*c:\symcache*http://msdl.microsoft.com/downloads/symbols<span style="color: #800080">;E:\COMProjects\ArithmeticComponent</span></strong></p>
 <p>Now if I run Debug Diagnostic tool again on the same report, I can see the functions reported in a better way but before doing that I would like to turn on one more setting under the <strong>Preferences</strong> tab under <strong>Options and Setting</strong> and that is selecting “<strong>Include source and line information in analysis reports</strong>”</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/12/67/metablogapi/5857.image_10.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/4705.image_thumb_4.png" alt="image" width="244" height="199" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/5857.image_10.png"><img style="border-width: 0px" title="image" src="{{ site.baseurl }}/assets/4705.image_thumb_4.png" alt="image" width="244" height="199" border="0" /></a></p>
 <p>&nbsp;</p>
 <p>After making these changes I re-run my report and now if I look at the Recovered Callstack for Thread 13, I can see the right function names</p>
 <table class="mycustomContainer" border="0" cellspacing="0" cellpadding="0">

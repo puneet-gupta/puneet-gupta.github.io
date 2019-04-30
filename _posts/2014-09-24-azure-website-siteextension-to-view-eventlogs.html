@@ -17,12 +17,12 @@ meta:
     <meta property="og:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2016/03/28/azure-website-siteextension-to-view-eventlogs/" />
     <meta property="og:site_name" content="Web Technology Blog" />
     <meta property="og:description" content="Did you know that Microsoft Azure websites have an amazing feature called Site Extensions ? Site extensions enables you to write a set to tools that can be installed on any Azure website once your extension is deployed in the SiteExtensions Gallery. To know more about Azure site extensions and Azure SiteExtensions gallery, please read..." />
-    <meta property="og:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/62/25/metablogapi/6663.image_thumb_642773E1.png" />
+    <meta property="og:image" content="https://puneet-gupta.github.io/assets/6663.image_thumb_642773E1.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Azure Website SiteExtension to view EventLogs" />
     <meta name="twitter:url" content="https://blogs.msdn.microsoft.com/puneetgupta/2016/03/28/azure-website-siteextension-to-view-eventlogs/" />
     <meta name="twitter:description" content="Did you know that Microsoft Azure websites have an amazing feature called Site Extensions ? Site extensions enables you to write a set to tools that can be installed on any Azure website once your extension is deployed in the SiteExtensions Gallery. To know more about Azure site extensions and Azure SiteExtensions gallery, please read..." />
-    <meta name="twitter:image" content="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/62/25/metablogapi/6663.image_thumb_642773E1.png" />
+    <meta name="twitter:image" content="https://puneet-gupta.github.io/assets/6663.image_thumb_642773E1.png" />
 author:
   login: puneetg
   email: puneetg@microsoft.com
@@ -35,9 +35,9 @@ permalink: "/puneetgupta/2014/09/24/azure-website-siteextension-to-view-eventlog
 <p>Site Extensions can be managed from the Kudu Console (more info <a href="http://blogs.msdn.com/b/benjaminperkins/archive/2014/03/24/using-kudu-with-windows-azure-web-sites.aspx">here</a> ) or the new Azure Portal at <a href="http://portal.azure.com/">http://portal.azure.com</a> . In the new portal you’ll find the settings under Web Sites when you click on your Web Site. When this blade has loaded you’ll find the <b>Extensions </b>section under <b>Configuration Settings.<br />
 </b>If you’re not familiar with the new portal yet then this Azure Friday <a href="https://channel9.msdn.com/Shows/Azure-Friday/Overview-of-the-new-Azure-Portal-with-Vishal-Joshi">session</a> is a great view.</p>
 <p>Every Azure web site has an <strong>EventLog.xml</strong> which is stored in <strong>D:\home\Logfiles</strong> folder. This eventlog.xml is a dump of Application Event logs and can be really useful in identifying runtime errors that occur on your web site as mentioned <a href="http://blogs.msdn.com/b/waws/archive/2014/05/22/azure-web-sites-troubleshooting-server-error-in-application-errors.aspx">here</a>. If you notice the event log is an XML format and can become hard to read if you have too many events logged. Also it contains events dumped in “raw” format, something like below and is not easily readable.</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/62/25/metablogapi/3250.image_70930659.png"><img title="image" src="{{ site.baseurl }}/assets/6663.image_thumb_642773E1.png" alt="image" width="489" height="372" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/3250.image_70930659.png"><img title="image" src="{{ site.baseurl }}/assets/6663.image_thumb_642773E1.png" alt="image" width="489" height="372" border="0" /></a></p>
 <p>This site extension will provide you with a formatted view of the Event Log which should be more easily consumed (and slightly prettier as well). Here is a screenshot of the same event when viewed in the site extension.</p>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/62/25/metablogapi/7120.image_15493F33.png"><img title="image" src="{{ site.baseurl }}/assets/4466.image_thumb_5B5C8CF7.png" alt="image" width="720" height="421" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/7120.image_15493F33.png"><img title="image" src="{{ site.baseurl }}/assets/4466.image_thumb_5B5C8CF7.png" alt="image" width="720" height="421" border="0" /></a></p>
 <p>Hope you find this useful. <img src="{{ site.baseurl }}/assets/1.gif" alt="Happy" /></p>
 <p>A big thanks to <strong><a href="http://thenextdoorgeek.com/">Rakki Muthukumar</a></strong> for helping with the styling of this page.</p>
 <p><strong><span style="text-decoration: underline">To install this Site extension on your Azure Website</span></strong></p>
@@ -48,7 +48,7 @@ permalink: "/puneetgupta/2014/09/24/azure-website-siteextension-to-view-eventlog
 <li>Then click on Gallery and Choose <strong>Azure Web Sites Event Viewer</strong></li>
 </ol>
 </ol>
-<p><a href="https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Blogs.Components.WeblogFiles/00/00/01/62/25/metablogapi/4314.image_695D5B75.png"><img title="image" src="{{ site.baseurl }}/assets/6404.image_thumb_74897670.png" alt="image" width="240" height="182" border="0" /></a></p>
+<p><a href="https://puneet-gupta.github.io/assets/4314.image_695D5B75.png"><img title="image" src="{{ site.baseurl }}/assets/6404.image_thumb_74897670.png" alt="image" width="240" height="182" border="0" /></a></p>
 <ul>
 <li>Once it is installed, the web page will give you a message saying that the site needs to be restarted and will give you a <strong>Restart Site</strong> button right there.</li>
 <li>Click on the <strong>Restart s</strong>ite button and navigate to the <strong>Installed</strong> section</li>
