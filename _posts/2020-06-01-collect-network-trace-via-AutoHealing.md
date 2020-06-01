@@ -114,7 +114,7 @@ Now the last step remaining is to configure the CollectNetworkTrace.exe in Auto-
  > ![Auto Heal Configuration]({{site.baseurl}}/media/2020/06/AutoHealConfiguration.png)   
 6. Hit the **Save** button and click **Save** on the Auto-healing main section to save the settings.
 
-That’s it. You are all set now??. Whenever the specified conditions are met, the Auto-Healing feature of Azure App Service will collect the network trace and you’ll be able to download the Network Trace from the Kudu Console for your app.
+That’s it. You are all set now :smiley: . Whenever the specified conditions are met, the Auto-Healing feature of Azure App Service will collect the network trace and you’ll be able to download the Network Trace from the Kudu Console for your app.
 
 Hope this article helps in identifying intermittent network issues in your app. Feel free to share your feedback or questions about **App Service Diagnostics** by emailing [diagnostics@microsoft.com](mailto:diagnostics@microsoft.com) or posting on [UserVoice](https://feedback.azure.com/forums/169385-web-apps%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B%E2%80%8B) with “[Diag]” in the title.
 
