@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Collect Network Trace Via Autohealing on Azure App Service
-date: 2017-06-01 15:00:00.000000000 +05:30
+date: 2020-06-01 15:00:00.000000000 +05:30
 tags:
 - Azure App Service
 - Netmon
