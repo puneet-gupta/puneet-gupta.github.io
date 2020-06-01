@@ -77,15 +77,16 @@ At this point, the _Collect-Network-Trace_ active directory app has ARM permissi
 5. At this point you have two options of providing the Active Directory App’s secrets to the CollectNetworkTrace.exe.
      
 	**a.** **You can either, configure the secrets as Application Settings under Configuration -** 3 APP Settings need to be configured for your app. They are: -
-		i. NETWORKTRACE_TENANTID
-		ii. NETWORKTRACE_CLIENTID
-		iii. NETWORKTRACE_CLIENTSECRET  
+	1. NETWORKTRACE_TENANTID
+	2. NETWORKTRACE_CLIENTID
+	3. NETWORKTRACE_CLIENTSECRET
+	
 
 	> IMPORTANT: If you are configuring this tool to run on a slot, specify the slot name here (e.g. staging) in setting **NETWORKTRACE_SLOTNAME**
 		Update the App Settings with the correct values of the Active directory App that you created in Step 1. Make sure you Save the settings after adding them
 
 	**b.** **Or you can configure the secrets in the NetworkTrace.exe.config** present inside d:\home\logfiles\NetworkTrace folder. These are the values that need to be specified.
-	>![Network Trace AppSettings]({{site.baseurl}}/media/2020/06/AppSettingScreenshot.png)
+	>![Network Trace AppSettings]({{site.baseurl}}/media/2020/06/AppSettingscreenshot.png)
 	
 	>IMPORTANT NOTE: By default, this tool captures, the trace of the production slot of the app. If you want this tool to capture traces from one of the app’s slots, you need to modify NETWORKTRACE_SLOTNAME setting either in CollectNetworkTrace.exe.config or in APP SETTINGS.
 
