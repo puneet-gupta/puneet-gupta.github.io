@@ -6,6 +6,8 @@ tags:
 - Netmon
 - Network Trace
 - AutoHealing
+
+description: Invoke a network capture trace automatically using the AutoHealing feature in Azure App Service
 permalink: "/puneetgupta/2020/06/01/collect-network-trace-via-AutoHealing/"
 ---
 
